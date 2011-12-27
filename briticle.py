@@ -122,8 +122,16 @@ class Briticle:
             "related_articles",
         )
 
+        META_IDS = (
+            "commentArea",
+            "commentText",
+        )
+
         for kls in META_CLASSES:
             for tag in self.soup.findAll("div", {"class": re.compile(kls)}):
+                tag.extract()
+        for kls in META_IDS:
+            for tag in self.soup.findAll("div", {"id": kls}):
                 tag.extract()
 
 MIN_LIMIT = 50
