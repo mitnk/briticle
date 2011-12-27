@@ -1,7 +1,7 @@
 #encoding=UTF8
 import re
 import unittest
-from briticle import Briticle
+from briticle import Briticle, IMAGE_TAG
 
 OFF_SETS = 20
 
@@ -19,6 +19,12 @@ class TestBriticle(unittest.TestCase):
         self.assertEqual(br.title, u"KISS")
         c = re.sub(r'\n', '', br.content)
         self.assertTrue(abs(len(c) - 2127) < OFF_SETS)
+
+    def testWordPress(self):
+        br = Briticle()
+        br.open(file_="./tests/lixiaolai.com1.html")
+        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
+        self.assertTrue(abs(len(c) - 875) < OFF_SETS)
 
 if __name__ == "__main__":
     unittest.main()

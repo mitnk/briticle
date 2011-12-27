@@ -103,7 +103,7 @@ class Briticle:
 
     def _deal_with_images(self):
         for tag in self.soup.findAll('img'):
-            tag.replaceWith("\n[Image]\n")
+            tag.replaceWith("\n" + IMAGE_TAG + "\n")
 
     def _deal_with_pre_code(self):
         for tag in self.soup.findAll('pre'):
@@ -128,6 +128,7 @@ class Briticle:
                 tag.extract()
 
 MIN_LIMIT = 50
+IMAGE_TAG = "[Image]"
 CONTENT_CLASSES = (
     "entry-content", # wordpress
     "highlightText", # only for kindle share
