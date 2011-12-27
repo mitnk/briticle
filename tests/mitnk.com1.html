@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="keywords" content="Linux 命令之 cut, Linux cut, Linux" />
+  <meta name="description" content="Linux 命令之 cut, Linux cut, Linux" />
+  <link rel="canonical" href="http://mitnk.com/20/linux_cut/" />
+
+  <link rel="shortcut icon" href="/site_media/favicon.ico" type="image/x-icon" />
+  <link rel="alternate" type="application/rss+xml" title="Mitnk's Blog - RSS Feed" href="http://mitnk.com/feed/" />
+  <link type="text/css" rel="stylesheet" href="/site_media/css/main.css" />
+
+  <link type="text/css" rel="stylesheet" href="/site_media/css/paginator.css" />
+  
+  
+    <link type="text/css" rel="stylesheet" href="/site_media/css/pygments.css" />
+    <link type="text/css" rel="stylesheet" href="/site_media/css/comments.css" />
+
+  <title>Linux 命令之 cut</title>
+
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18137446-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</head>
+
+<body>
+<div id="wrapper">
+
+  <div id="header">
+    <h1><a href="/">Evil Inside</a></h1>
+    <h2>mitnk's blog</h2>
+      <div id="header-search">
+<form id="cse-form" action="http://www.google.com/cse">
+  <input type="hidden" name="siteurl" value="mitnk.com" />
+  <input type="hidden" value="001178881884595255196:zxbbdpwksnw" name="cx" />
+  <input type="text" id="cse-input" value="Search" name='q' onFocus="enter_search_box()" onBlur="leave_search_box()" />
+
+</form>
+</div>
+
+  </div>
+
+  <div id="menu">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/commands/">Commands</a></li>
+      <li><a href="/notes/">Notes</a></li>
+
+      <li><a href="/about/">About</a></li>
+    </ul>
+  </div>
+
+  <div id="content"> 
+<div class="entry">
+  <h1 class="entry-title">Linux 命令之 cut</h1>
+  <div class="entry-content">
+      <p>列出系统所有用户</p>
+
+<p><div class="highlight"><pre>cat /etc/passwd | cut -d <span class="s2">&quot;:&quot;</span> -f 1
+</pre></div>
+</p>
+  </div>
+  <div class="entry-meta">
+    Posted at Dec. 3, 2010
+  </div>
+
+  
+    
+
+<div id="comment_container">
+    <div id="comment_count">
+
+    
+    
+        Post the first Response to “Linux 命令之 cut”:
+    
+    </div>
+
+  
+  
+
+  <div id="comment_form">
+    <form action="/comments/post/" method="post">
+      <div style='display:none'><input type='hidden' name='csrfmiddlewaretoken' value='280b51b71e35b8305e301d29f64c3a8c' /></div>
+      
+      
+        
+          <div><input type="hidden" name="content_type" value="public.article" id="id_content_type" /></div>
+        
+      
+        
+          <div><input type="hidden" name="object_pk" value="20" id="id_object_pk" /></div>
+        
+      
+        
+          <div><input type="hidden" name="timestamp" value="1324961844" id="id_timestamp" /></div>
+        
+      
+        
+          <div><input type="hidden" name="security_hash" value="52a0d20240d9f71864ca4df394601765dc2277a8" id="id_security_hash" /></div>
+
+        
+      
+        
+          
+          <p
+            
+            >
+            <label for="id_name">Name</label> <input id="id_name" type="text" name="name" maxlength="50" />
+          </p>
+        
+      
+        
+          
+          <p
+            
+            >
+            <label for="id_email">Email address</label> <input type="text" name="email" id="id_email" />
+          </p>
+        
+      
+        
+          
+          <p
+            
+            >
+
+            <label for="id_url">URL</label> <input type="text" name="url" id="id_url" />
+          </p>
+        
+      
+        
+          
+          <p
+            
+            >
+            <label for="id_comment">Comment</label> <textarea id="id_comment" rows="10" cols="40" name="comment"></textarea>
+          </p>
+        
+      
+        
+          
+          <p
+            
+             style="display:none;">
+
+            <label for="id_honeypot">If you enter anything in this field your comment will be treated as spam</label> <input type="text" name="honeypot" id="id_honeypot" />
+          </p>
+        
+      
+      <p><input type="hidden" name="next" value="/20/linux_cut/#last_comment" /></p>
+      <p><input type="submit" name="submit" class="submit-post" value="Let's Post!" /></p>
+    </form>
+  </div>
+</div> <!-- end of comment-container -->
+
+  
+</div>
+ </div>
+  <div style="height:20px"></div>
+</div> <!-- end #wrapper -->
+
+<div id="footer">
+  Power by <a href="http://twitter.com/mitnk">@mitnk</a> 2010-2011 <a href="/feed/">RSS</a>
+
+</div>
+
+<script type="text/javascript" src="/site_media/js/main.js"> </script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18137446-1']);
+  _gaq.push(['_setDomainName', '.mitnk.com']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+</body>
+</html>
