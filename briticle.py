@@ -21,34 +21,33 @@ class Briticle:
         html_parser = HTMLParser.HTMLParser()
         content = ""
         for kls in CONTENT_CLASSES:
-            if len(kls) >= 8:
-                tag = self.soup.find("div", {"class": re.compile(kls)})
-            elif kls == "post":
-                tag = self.soup.find("div", {"class": kls})
-                if not tag:
-                    tag = self.soup.find("div", {"class": re.compile(kls)})
+            if '-' in kls or len(kls) > 8:
+                tags = self.soup.findAll("div", {"class": re.compile(kls)})
             else:
-                tag = self.soup.find("div", {"class": kls})
-            if not tag:
+                tags = self.soup.findAll("div", {"class": kls})
+            if not tags:
                 continue
 
-            text = ''.join(tag.findAll(text=True))
+            length = 0
+            max_tag = None
+            for tag in tags:
+                text = ''.join(tag.findAll(text=True))
+                if len(text) > length:
+                    length = len(text)
+                    max_tag = tag
+
+            text = ''.join(max_tag.findAll(text=True))
             text = re.sub(r'\r*\n+', '\r\n\r\n', text)
             content = html_parser.unescape(text)
             if len(content) > MIN_LIMIT: # content is too short
                 break
 
-        if content < MIN_LIMIT:
+        if len(content) < MIN_LIMIT:
             for kls in CONTENT_IDS:
-                if '-' in kls:
-                    tag = self.soup.find("div", {"id": re.compile(kls)})
-                else:
-                    tag = self.soup.find("div", {"id": kls})
-
+                tag = self.soup.find("div", {"id": kls})
                 text = ''.join(tag.findAll(text=True))
                 text = re.sub(r'\r*\n+', '\r\n\r\n', text)
                 content = html_parser.unescape(text)
-
                 if len(content) > MIN_LIMIT: # content is too short
                     break
         self.content = content
@@ -130,12 +129,13 @@ class Briticle:
 MIN_LIMIT = 50
 IMAGE_TAG = "[Image]"
 CONTENT_CLASSES = (
+    "content",
     "entry-content", # wordpress
     "highlightText", # only for kindle share
+    "article-body", # thenextweb.com
     "articleContent",
     "entry-body",
     "entrybody",
-    "KonaBody", # thenextweb.com
     "postBody", # http://news.cnet.com
     "post-body", # blogspot
     "blog-body", # economist.com/blogs
@@ -143,22 +143,19 @@ CONTENT_CLASSES = (
     "articleBody",
     "articlePage", # for wsj.com
     "storycontent",
-    "the-content",
     "storyText",
     "blogbody",
     "realpost",
     "asset-body",
     "entry",
     "article",
-    "-content",
-    "post",
-    "copy",
     "story", # techdirt.com
-    "text",
     "main",
+    "text",
 )
 
 CONTENT_IDS = (
+    "readme",
     "story",
     "-content", # need before 'post'
     "entry-",

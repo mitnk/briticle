@@ -26,5 +26,24 @@ class TestBriticle(unittest.TestCase):
         c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
         self.assertTrue(abs(len(c) - 875) < OFF_SETS)
 
+    def testTheNextWeb(self):
+        br = Briticle()
+        br.open(file_="./tests/thenextweb.com.html")
+        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
+        self.assertTrue(abs(len(c) - 1440) < OFF_SETS)
+
+    def testGitHubProjectPage(self):
+        br = Briticle()
+        br.open(file_="./tests/github_project.html")
+        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
+        self.assertTrue(abs(len(c) - 1317) < OFF_SETS)
+
+    def testClassContent(self):
+        br = Briticle()
+        br.open(file_="./tests/petzl.com.html")
+        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
+        self.assertTrue(abs(len(c) - 3761) < OFF_SETS)
+
+
 if __name__ == "__main__":
     unittest.main()
