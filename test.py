@@ -6,6 +6,12 @@ from briticle import Briticle, IMAGE_TAG
 OFF_SETS = 20
 
 class TestBriticle(unittest.TestCase):
+    def testAMixDk(self):
+        br = Briticle()
+        br.open(file_="./tests/amix.dk.html")
+        c = re.sub(r'\n', '', br.content)
+        self.assertTrue(abs(len(c) - 2362) < OFF_SETS)
+
     def testMitnkCom1(self):
         br = Briticle()
         br.open(file_="./tests/mitnk.com1.html")

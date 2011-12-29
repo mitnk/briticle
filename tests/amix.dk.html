@@ -1,0 +1,710 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <base href="http://amix.dk/" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Pythonic JavaScript to CoffeeScript compiler - amix.dk</title>
+  <script type="text/javascript">
+  var PageOracle = {
+    view_edit_mode: 'on',
+    page_hidden: '0',
+
+    getPageId: function() {
+      return '119669';
+    },
+
+    isCmsPage: function() {
+      return 'False' == 'True';
+    },
+
+    getMenuId: function() {
+      return 1;
+    },
+
+    getBaseURL: function() {
+      return 'http://amix.dk';
+    },
+
+    hasEditPermission: function() {
+      return 'False' == 'True';
+    },
+
+    isAdmin: function() {
+      return 'False' == 'True';
+    },
+    
+    isHiddenToPublic: function() {
+      return PageOracle.page_hidden == '1';
+    },
+
+    getViewEditMode: function() {
+      return PageOracle.view_edit_mode;
+    },
+
+    isLoggedIn: function() {
+        return 'True' == 'False';
+    }
+  };
+
+  function getPageOracle() {
+    return PageOracle;
+  }
+  </script>
+
+  <link rel="stylesheet" type="text/css" href="http://amix.dk/generated/SiteHeader_styles.css" />
+  <script src="http://amix.dk/generated/SiteHeader_scripts.js" type="text/javascript"></script>
+
+    <style type="text/css">
+
+        #navigation { display: none; }
+        #CMS_HeadLine { display: none; }
+        </style>
+    <style type="text/css">/*
+ * Manage
+ */
+.CMS_BlogManage {
+  margin: 0 0 10px 0;
+}
+
+/*
+ * Blog entry
+ */
+.CMS_BlogEntry {
+  padding: 0;
+  margin: 0 0 30px 0;
+}
+
+.CMS_BlogEntry h1 {
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+}
+
+.CMS_BlogEntry hr {
+  margin: 15px 0 0px 0;
+  border: 1px dashed #ccc;
+}
+
+.CMS_BlogText {
+  padding: 10px 0 0px 0;
+}
+
+.CMS_BlogText p {
+  margin: 12px 0 12px 0 !important;
+  padding: 0 !important;
+}
+
+.CMS_BlogEntryInfo, .CMS_BlogEntryInfo a, .CMS_BlogEntryInfo a:hover, .CMS_BlogEntryInfo a:visited {
+  padding: 7px 0 0px 0;
+  color: #777;
+}
+
+/*
+ * Blog labels
+ */
+.CMS_BlogLabels {
+  font-size: 11px;
+  padding: 0px 2px 3px 2px;
+}
+
+.CMS_BlogLabels a, .CMS_BlogLabels a:hover, .CMS_BlogLabels a:visited {
+  color: #555;
+  margin: 0 8px 0 0;
+}
+
+/*
+ * Blog comments
+ */
+.CMS_BlogComments {
+  padding: 20px 0 0 0;
+}
+
+.CMS_BlogComments dt {
+  font-weight: bold;
+  color: #555;
+  padding: 0 0 3px 0;
+  margin: 0;
+}
+
+.CMS_BlogComments label.latest, .CMS_BlogComments label.latest a {
+  color: #999;
+  font-size: 12px;
+}
+
+
+.CMS_BlogComments label.author, .CMS_BlogComments label.author a {
+  font-size: 13px;
+  color: #333;
+}
+
+.CMS_BlogComments label.author a {
+  text-decoration: underline;
+  border: none;
+}
+
+.CMS_BlogComments label.date {
+  font-weight: normal;
+  font-size: 13px;
+  color: #999;
+}
+
+.CMS_BlogComments dd {
+  padding: 0 0 8px 8px;
+  margin: 0;
+}
+
+.CMS_BlogInner {
+  margin: 0;
+  padding: 0px 8px 0 8px;
+}
+
+/*
+ * Blog post comment
+ */
+.CMS_BlogPostComment {
+  background-color: #eee;
+}
+
+.CMS_BlogPostComment dt {
+  font-weight: bold;
+  padding: 0 0 2px 0;
+  margin: 0;
+}
+
+.CMS_BlogPostComment dd {
+  padding: 0 0 8px 8px;
+  margin: 0;
+}
+
+.CMS_BlogPostComment .desc {
+  color: #555;
+  font-size: 11px;
+}
+
+.CMS_BlogPostComment form, .CMS_BlogPostComment dl {
+  margin: 0 !important;
+  padding: 0 0 5px 0 !important;
+}
+
+.CMS_BlogPostComment .input {
+  border: 1px solid #999;
+}
+
+.CMS_BlogPostComment textarea, .CMS_Comment_TA {
+  width: 500px;
+  height: 250px;
+  border: 1px solid #999;
+}
+
+.CMS_BlogTitle {
+  background-color: #DDDDFF;
+  font-size: 13px;
+  border-bottom: 1px solid #999;
+  margin: 0 0 15px 0;
+  padding: 5px;
+}
+
+
+/*
+ * Blog info
+ */
+.CMS_BlogInfo {
+  float: right;
+  border-left: 1px dashed #ccc;
+  border-bottom: 1px dashed #ccc;
+  padding: 10px 25px;
+  margin: 0 3px 3px 10px;
+}
+
+.CMS_BlogInfo ul {
+  list-style: none none;
+  margin: 0;
+  padding: 0 5px 0 10px;
+}
+
+.CMS_BlogInfo ul {
+  padding: 3px 4px 3px 6px;
+}
+
+.CMS_BlogInfo .head {
+  font-weight: bold;
+  font-size: 14px;
+  padding: 0 0 5px 0;
+}
+
+.CMS_BlogInfo .caption {
+  text-decoration: underline;
+  padding: 3px 0 2px 0;
+}
+
+.post_list li {
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+}
+</style>
+    <script type="text/javascript">var Cookies = {
+    get: function(name) {
+       if(document.cookie.length>0) {
+           var c_start = document.cookie.indexOf(name + "=");
+           if(c_start != -1) { 
+               c_start = c_start + name.length+1;
+               c_end=document.cookie.indexOf(";",c_start);
+               if(c_end==-1) 
+                   c_end = document.cookie.length;
+               return unescape(document.cookie.substring(c_start,c_end));
+           } 
+       }
+       return '';
+    },
+
+    set: function(name, value, /*optional*/ expire_days) {
+        var str_exp_date = '';
+        if(expire_days) {
+            var exdate = new Date();
+            exdate.setDate(exdate.getDate() + expire_days);
+            str_exp_date = ';expires=' + exdate.toGMTString();
+        }
+        document.cookie = name + "=" + escape(value) + str_exp_date;
+    }
+}
+
+function fillInCookieInfo() {
+    if(Cookies.get('sk_bp_name')) {
+        var form = document.getElementById('CMS_CommentForm');
+
+        var name = Cookies.get('sk_bp_name');
+        var email = Cookies.get('sk_bp_email');
+        var website = Cookies.get('sk_bp_website');
+
+        form.author.value = name;
+        form.email.value = email;
+        form.website.value = website;
+    }
+}
+
+if(!Blog)
+    var Blog = {};
+
+Blog.postComment_real = function() {
+        var form = AJS.$('CMS_CommentForm');
+        var name = AJS.$f(form, 'author');
+        var email = AJS.$f(form, 'email');
+        var website = AJS.$f(form, 'website');
+
+        var comment = AJS.$f(form, 'content');
+        var btn_submit = AJS.$('btn_submit');
+
+        btn_submit.disabled = true;
+
+        var d = AJS.getRequest('blog/addComment');
+        d.addCallback(function(cmnt_html) {
+            Cookies.set('sk_bp_name', name.value, 30);
+            Cookies.set('sk_bp_email', email.value, 30);
+            Cookies.set('sk_bp_website', website.value, 30);
+
+            var post_comment = $bytc('div', 'CMS_BlogPostComment')[0];
+            var flash_div;
+            ACN(post_comment, flash_div = DIV({s: 'padding: 10px 0 10px 0'}, B('Comment posted!')));
+            AJS.fx.highlight(flash_div, {duration: 5000, onComplete: function() {
+                removeElement(flash_div);
+            }});
+
+
+            var cmnts = AJS.$bytc('div', 'CMS_BlogInner')[0];
+
+            var dom = AJS.HTML2DOM(cmnt_html);
+            AJS.ACN(cmnts, dom);
+            AJS.fx.highlight(dom, {duration: 5000});
+
+            btn_submit.disabled = false;
+            comment.value = '';
+
+            //Update count
+            var counts = AJS.$bytc('span', 'CMS_CmntLen');
+            AJS.map(counts, function(c) {
+                AJS.setHTML(c, parseInt(c.innerHTML) + 1);
+            });
+
+            var no_cmnt = AJS.$('CMS_noCmnt');
+            if(no_cmnt) {
+                AJS.setHTML(no_cmnt, '<span class="CMS_CmntLen">1</span> comment so far');
+            }
+        });
+        d.sendReq(AJS.formContents(form));
+        return false;
+}
+
+Blog.validateCaptcha_real = function() {
+    var form = AJS.$('CMS_CommentForm');
+
+    if($f(form, 'author').value == '' || $f(form, 'content').value == '') {
+        alert("Name or comment can't be empty.")
+        return false;
+    }
+
+    var url = AJS.BASE_URL + '/blog/showCaptcha';
+    url = url.replace(/([^:])\/\//g, '$1/');
+    return GB_show('Are you a human test?', url, 500, 500);
+}
+
+Blog.previewComment_real = function() {
+    var url = AJS.BASE_URL + '/blog/previewComment';
+    url = url.replace(/([^:])\/\//g, '$1/');
+    return GB_show('Preview your comment', url, 500, 500);
+}
+
+Blog.renderComment = function(holder) {
+    var content = AJS.$('comment_content').value;
+    var req = AJS.getRequest('blog/renderComment');
+    req.addCallback(function(html) {
+        holder.innerHTML = html;
+    });
+    req.sendReq({content: content});
+}
+
+Blog.postComment = onDemand("Blog.postComment_real", path_ajs);
+Blog.validateCaptcha = onDemand("Blog.validateCaptcha_real", path_ajs);
+Blog.previewComment = onDemand("Blog.previewComment_real", path_ajs.concat(path_greybox));
+</script>
+    <script>
+    var win_loc = window.location;
+    if(win_loc.host.indexOf('www.') != -1) {
+        var cur_loc = window.location.toString();
+        window.location = cur_loc.replace('www.', '');
+    }
+</script>
+
+<style type="text/css">
+  /**
+    Set style on current selected menu item
+    **/
+  .CMS_ListMenu li#Main a {
+    background-color: #fff;
+    color: #333;
+   }
+
+  .CMS_ListMenu li#Main a:hover {
+    background-color: #fff;
+   }
+</style>
+<link rel="alternate" type="application/rdf+xml" title="RSS" href="http://feeds.feedburner.com/amixdk" /> 
+<link rel="service.feed" type="application/atom+xml" title="Atom" href="http://feeds.feedburner.com/amixdk" />
+
+</head>
+<body class="Main">
+
+<div id="hrtop"></div>
+
+<center>
+<div id="container">
+  <div id="top">
+    <div id="v7">
+      <!-- Google CSE Search Box Begins -->
+  <form id="searchbox_002288592806869833798:pkqz6zorjec" action="http://amix.dk/GSController/" style="padding: 2px 0 2px 0; margin: 0">
+    <input type="hidden" name="cx" value="002288592806869833798:pkqz6zorjec" />
+
+    <input name="q" type="text" style="width: 155px" id="google_search" placeholder="Search" /><br />
+  </form>
+  <!-- Google CSE Search Box Ends -->
+    </div>
+    <div id="logo">
+      <a href="http://amix.dk/"><img src="static_tmpl/images/logo.png" alt="amix.dk - If it rains, let it rain, if the wind blows, let it blow." style="vertical-align: middle" /></a>
+      <span style="color:#999; text-shadow: 1px 1px 1px #eee;">hacking and gonzo since 2000</span>  
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <td id="content">
+        <div id="CMS_ContentText">
+                  <span class="Content"><div id="Blog_amix.dk blog" post_id="19669"><div class="CMS_BlogEntry" id="BlogEntry_19669">
+  <h1>
+    Pythonic JavaScript to CoffeeScript compiler
+      
+  </h1>
+
+  <div class="CMS_BlogText">
+    I am rewriting some of my old JavaScript code into <a href="http://jashkenas.github.com/coffee-script/" target="_blank">CoffeeScript</a>. I feel more happy in CoffeeScript and I think I produce more readable and more maintainable code. It also offers some great features such as classes. To help me on this transition I use <a href="https://github.com/rstacruz/js2coffee" target="_blank">js2coffee</a> which compiles JavaScript to CoffeeScript. I have made an extension of js2coffee that is a bit more Pythonic (produces Python looking CoffeeScript code :-)).
+<p>
+I have before covered CoffeeScript and you should read my post if you don't know what CoffeeScript is:
+</p>
+<ul>
+<li>
+<a href="http://amix.dk/blog/post/19612">CoffeeScript: The beautiful way to write JavaScript</a>
+</li>
+
+</ul>
+<h3>The Pythonic extension of js2coffee</h3>
+
+<p>
+js2coffee is great, but I don't like some of the code it produces as it's more similar to Ruby than Python. <a href="https://github.com/amix/js2coffee" target="_blank">I have forked js2coffee</a> and provided a --pythonic option which does following things:
+</p>
+<ul>
+<li>
+Uses 4 spaces for each step of indent
+</li>
+<li>
+Uses parenthesized function calls - - I really dislike Ruby's optional parenthesizes on function calls, it produces <a href="https://github.com/rstacruz/js2coffee/issues/83" target="_blank">unceccary bugs</a> and makes code harder to understand (at least, when having a Python background)
+
+</li>
+<li>
+Does not use implicit returns
+</li>
+<li>
+Does not use unless - - for me, code that uses unless is much harder to understand
+</li>
+</ul>
+
+<p>
+Here's a little showcase of what --pythonic does different:
+</p>
+<h3>$ ~/> cat test.'s</h3>
+
+<p>
+The JavaScript code we are compiling to CoffeeScript:
+
+</p>
+<div class="highlight"><pre><span class="k">function</span> <span class="nx">helloWorld</span><span class="p">(</span><span class="nx">some_value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">some_value</span> <span class="o">!=</span> <span class="s1">&#39;hello&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span><span class="o">;</span>
+    <span class="nx">aFunctionCall</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="s2">&quot;value&quot;</span><span class="o">;</span>
+<span class="p">}</span>
+
+</pre></div><h3>$ js2coffee test.js</h3>
+
+<p>
+Compiling it via the standard js2coffee produces following code:
+</p>
+<div class="highlight"><pre><span class="nx">helloWorld</span> <span class="o">=</span> <span class="p">(</span><span class="nx">some_value</span><span class="p">)</span> <span class="o">-&gt;</span>
+  <span class="k">return</span>  <span class="nx">unless</span> <span class="nx">some_value</span> <span class="nx">is</span> <span class="s2">&quot;hello&quot;</span>
+
+  <span class="nx">aFunctionCall</span> <span class="s2">&quot;hello&quot;</span>
+  <span class="s2">&quot;value&quot;</span>
+</pre></div><h3>$ js2coffee --pythonic test.js</h3>
+
+<p>
+Compiling it with the --pythonic option produced following code - - which for me is easier to understand given my Python background:
+</p>
+<div class="highlight"><pre><span class="nx">helloWorld</span> <span class="o">=</span> <span class="p">(</span><span class="nx">some_value</span><span class="p">)</span> <span class="o">-&gt;</span>
+
+    <span class="k">return</span> <span class="k">if</span> <span class="nx">some_value</span> <span class="nx">isnt</span> <span class="s2">&quot;hello&quot;</span>
+    <span class="nx">aFunctionCall</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">&quot;value&quot;</span>
+</pre></div><h3>Google Closure + CoffeeScript?</h3>
+
+<p>
+Another project I am currently working on is to improve CoffeeScript's compiler so it can work with <a href="http://code.google.com/closure/" target="_blank">Google Closure</a>. What this enables is to write high-level code in CoffeeScript that gets minimized and optimized by Google Closure's compiler (which does non-trivial code transformations and optimizations).
+</p>
+
+<p>
+There's already a project that does something similar to this:
+</p>
+
+<ul>
+<li>
+<a href="http://bolinfest.com/coffee/features.html" target="_blank">Closure Mode for CoffeeScript</a>
+</li>
+</ul>
+
+  </div>
+
+  <div class="CMS_BlogEntryInfo">
+        <span>
+          <a href="blog/label/7#Code">Code</a>
+
+          &middot;
+          <a href="blog/label/24#Code-improvement">Code improvement</a>
+          &middot;
+          <a href="blog/label/20#Code-rewrite">Code rewrite</a>
+          &middot;
+          <a href="blog/label/13#Design">Design</a>
+          &middot;
+
+          <a href="blog/label/11#JavaScript">JavaScript</a>
+          &middot;
+          <a href="blog/label/27#node-js">node.js</a>
+        </span>
+
+        <span style="padding: 0 10px">
+        •
+        </span>
+
+    28. Dec
+  </div>
+
+
+  
+<div class="CMS_BlogComments">
+
+  <a name="comments"></a>
+
+  <div class="CMS_BlogInner">
+  </div>
+</div>
+
+<div class="CMS_BlogPostComment">
+  <div class="CMS_BlogTitle">Post a comment</div>
+  <div class="CMS_BlogInner">
+    <form onsubmit="return Blog.validateCaptcha()" id="CMS_CommentForm">
+
+  <dl>
+    <input type="hidden" name="post_id" value="19669" />
+    <dt>Name:</dt>
+
+    <dd>
+      <input name="author" size="30" type="text" class="input" />
+    </dd>
+
+    <dt>Website:</dt>
+    <dd>
+      <input name="website" size="30" type="text" class="input" />
+      <div class="desc">Optional.</div>
+
+    </dd>
+
+    <dt>Email:</dt>
+    <dd>
+      <input name="email" size="30" type="text" class="input" /><br />
+      <div class="desc">Optional. Won't be posted.</div>
+    </dd>
+
+    <dt>Comment:</dt>
+
+    <dd>
+      <textarea name="content" id="comment_content"></textarea>
+
+      <div class="desc">Auto paragraphing. AmiFormat is used (<a href="http://orangoo.com/labs/AmiNation/AmiFormat/online%20reference/" target="_blank">reference</a>).</div>
+    </dd>
+
+    <dt>
+      <input type="button" value="Preview comment" id="btn_preview" style="margin-right: 20px" onclick="Blog.previewComment()" />
+
+      <input type="submit" value="Post comment" id="btn_submit" />
+    </dt>
+  </dl>
+</form>
+<script>
+    fillInCookieInfo();
+    document.getElementById('btn_submit').disabled = false;
+</script>
+
+  </div>
+</div>
+</div>
+
+</div></span>
+        </div>
+
+      </td>
+
+      <td id="menu">
+        <span class="rss"><a href="http://feeds.feedburner.com/amixdk"><img
+        src="static_tmpl/images/feed_icon.gif" style="vertical-align: middle;
+        padding-right: 5px;" /> <span>Subscribe to my RSS feed</span></a></span>
+
+        <div class="about_info">
+        <div class="author_image"><img src="http://amix.dk/uploads/amix3k.png" alt="Amir Salihefendic" /></div>
+        Blog of Amir Salihefendic<br />
+
+        co-founder of <a href="http://www.plurk.com/amix/invite" target="_blank">Plurk</a><br />
+        <a href="http://todoist.com/" target="_blank">Todoist</a> and <a href="http://wedoist.com/" target="_blank">Wedoist</a><br />
+        Enjoy your stay!<br /><img src="/static_tmpl/amix_dk_email.gif" />
+        </div>
+
+        <b>Labels</b>
+
+        <ul class="red">
+          <ul class="">
+<li><a href="blog/label/25#AJAX-and-comet">AJAX and comet</a></li>
+<li><a href="blog/label/3#amix-dk-related">amix.dk related</a></li>
+<li><a href="blog/label/14#Announcements">Announcements</a></li>
+<li><a href="blog/label/26#Benchmarks">Benchmarks</a></li>
+<li><a href="blog/label/31#Books">Books</a></li>
+<li><a href="blog/label/7#Code">Code</a></li>
+<li><a href="blog/label/24#Code-improvement">Code improvement</a></li>
+
+<li><a href="blog/label/20#Code-rewrite">Code rewrite</a></li>
+<li><a href="blog/label/23#Database">Database</a></li>
+<li><a href="blog/label/13#Design">Design</a></li>
+<li><a href="blog/label/12#Education">Education</a></li>
+<li><a href="blog/label/18#Interesting">Interesting</a></li>
+<li><a href="blog/label/11#JavaScript">JavaScript</a></li>
+<li><a href="blog/label/2#Life">Life</a></li>
+<li><a href="blog/label/27#node-js">node.js</a></li>
+<li><a href="blog/label/8#Orangoo">Orangoo</a></li>
+
+<li><a href="blog/label/19#Plurk">Plurk</a></li>
+<li><a href="blog/label/4#Political">Political</a></li>
+<li><a href="blog/label/29#Posters">Posters</a></li>
+<li><a href="blog/label/30#Presentations">Presentations</a></li>
+<li><a href="blog/label/22#Psychology">Psychology</a></li>
+<li><a href="blog/label/10#Python">Python</a></li>
+<li><a href="blog/label/21#Security">Security</a></li>
+<li><a href="blog/label/9#Skeletonz">Skeletonz</a></li>
+<li><a href="blog/label/6#Stuff">Stuff</a></li>
+
+<li><a href="blog/label/15#Tips">Tips</a></li>
+<li><a href="blog/label/16#Todoist">Todoist</a></li>
+<li><a href="blog/label/5#VIM-Editor">VIM Editor</a></li>
+<li><a href="blog/label/28#Wedoist">Wedoist</a></li>
+</ul>
+        </ul>
+
+        <b>Archive</b>
+        <ul class="green">
+
+          <ul class="">
+<li>Posts in <a href="blog/archive/1-2011">2011</a></li>
+<li>Posts in <a href="blog/archive/1-2010">2010</a></li>
+<li>Posts in <a href="blog/archive/1-2009">2009</a></li>
+<li>Posts in <a href="blog/archive/1-2008">2008</a></li>
+<li>Posts in <a href="blog/archive/1-2007">2007</a></li>
+
+<li>Posts in <a href="blog/archive/1-2006">2006</a></li>
+<li>Posts in <a href="blog/archive/1-2005">2005</a></li>
+<li>Posts in <a href="blog/archive/1-2004">2004</a></li>
+</ul>
+        </ul>
+
+        <b>My Projects</b>
+        <ul class="blue">
+
+          <li><a href="http://plurk.com/amix" target="_blank">Plurk</a></li>
+          <li><a href="http://todoist.com/" target="_blank">Todoist</a></li>
+          <li><a href="http://wedoist.com/" target="_blank">Wedoist</a></li>
+          <li><a href="http://github.com/amix" target="_blank">github.com/amix</a></li>
+          <li><a href="http://orangoo.com/labs/" target="_blank">Older projects...</a></li>
+        </ul>
+
+        <div style="padding-top: 25px;"></div>
+
+        <div style="width:200px; height:375px; float: right;"><iframe src="http://www.plurk.com/getWidget?uid=1&amp;h=375&amp;w=200&amp;u_info=2&amp;bg=FFFFFF&tl=eeeeee" width="200" frameborder="0" height="375" scrolling="no"></iframe><div style="float: right; padding: 1px;"> <a href="http://plurk.com/" target="_blank" style="font-size: 10px !important; color: #999 !important; border: none; text-decorate: none;" title="Plurk - A Social Journal for your life">Plurk.com</a></div></div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div id="bottom">
+  <div id="login">
+    <img src="static_core/images/lock_open.png" alt="" /> <a href="#" onclick="return showLogin()" id="login_link">Login</a>
+
+  </div>
+  &copy; 2000-2009 amix. Powered by <a href="http://orangoo.com/skeletonz/">Skeletonz</a>.
+</div>
+
+</center>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+    var pageTracker = _gat._getTracker("UA-5309378-6");
+    pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>

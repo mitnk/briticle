@@ -21,7 +21,7 @@ class Briticle:
         html_parser = HTMLParser.HTMLParser()
         content = ""
         for kls in CONTENT_CLASSES:
-            if '-' in kls or len(kls) > 8:
+            if '-' in kls or len(kls) >= 8:
                 tags = self.soup.findAll("div", {"class": re.compile(kls)})
             else:
                 tags = self.soup.findAll("div", {"class": kls})
@@ -113,6 +113,7 @@ class Briticle:
             "post-bottom-area",
             "wp-caption", # wordpress images
             "entryDescription", # wired.com
+            "BlogEntryInfo",
             "post-meta",
             "footnotes",
             "addthis_toolbox",
@@ -141,6 +142,7 @@ CONTENT_CLASSES = (
     "entry-content", # wordpress
     "highlightText", # only for kindle share
     "article-body", # thenextweb.com
+    "BlogText",
     "articleContent",
     "entry-body",
     "entrybody",
