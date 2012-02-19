@@ -4,18 +4,21 @@ Briticle
 Fetch Blog Articles via URLs
 
 Author:
-mitnk [AT] twitter
-whgking [AT] gmail [DOT] com
+mitnk @ twitter
+whgking@gmail.com
 """
 
 import HTMLParser
 import re
 import urllib2
+
 from BeautifulSoup import BeautifulSoup, Comment
 
 class Briticle:
     def __init__(self, url=''):
         self.url = url
+        if url:
+            self.open(url)
 
     def _get_content(self):
         html_parser = HTMLParser.HTMLParser()
@@ -45,11 +48,12 @@ class Briticle:
         if len(content) < MIN_LIMIT:
             for kls in CONTENT_IDS:
                 tag = self.soup.find("div", {"id": kls})
-                text = ''.join(tag.findAll(text=True))
-                text = re.sub(r'\r*\n+', '\r\n\r\n', text)
-                content = html_parser.unescape(text)
-                if len(content) > MIN_LIMIT: # content is too short
-                    break
+                if tag:
+                    text = ''.join(tag.findAll(text=True))
+                    text = re.sub(r'\r*\n+', '\r\n\r\n', text)
+                    content = html_parser.unescape(text)
+                    if len(content) > MIN_LIMIT: # content is too short
+                        break
         self.content = content
 
     def open(self, url="", file_=""):

@@ -1,1 +1,13 @@
 Fetch blog articles via URLs.
+
+Requirements:
+
+- BeautifulSoup
+
+WARNNING:
+
+This libiray does NOT suppose to be working perfectly. It's just a toy porject of mine. You may take a look at Readability if you interested: http://www.readability.com/publishers/api/
+
+mitnk
+whgking@gmail.com
+
