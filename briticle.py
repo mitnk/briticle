@@ -13,6 +13,7 @@ import re
 import urllib
 import urllib2
 from urlparse import urlparse
+import os.path
 
 from BeautifulSoup import BeautifulSoup, Comment
 
@@ -198,15 +199,18 @@ class Briticle:
             src = self.images[img_index]
             image_ext = src.split(".")[-1]
             image_name = "%s%s.%s" % (file_name, img_index, image_ext)
-            local_file_name = "%s/%s" % (dir_name, image_name)
+            local_file_name = os.path.join(dir_name, image_name)
             urllib.urlretrieve(src, local_file_name)
             self.content_html = self.content_html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
 
-        with open(dir_name + "/" + file_name, 'w') as f:
+        file_path = os.path.join(dir_name, file_name)
+        with open(file_path, 'w') as f:
             html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
             html += u'<title>%s</title></head><body>' % self.title
             html += self.content_html + '</body></html>'
             f.write(html.encode('utf-8'))
+
+        return file_path
 
 
 MIN_LIMIT = 50
