@@ -56,6 +56,11 @@ class TestBriticle(unittest.TestCase):
         c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
         self.assertTrue(abs(len(c) - 2899) < OFF_SETS)
 
+    def testDivWithoutNames(self):
+        br = Briticle()
+        br.open(file_="./tests/div_without_attrs.html")
+        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
+        self.assertTrue(abs(len(c) - 1024) < OFF_SETS)
 
 if __name__ == "__main__":
     unittest.main()

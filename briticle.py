@@ -14,6 +14,14 @@ import urllib2
 
 from BeautifulSoup import BeautifulSoup, Comment
 
+VERBOSE = False
+
+
+
+def print_info(info):
+    if VERBOSE:
+        print info
+
 class Briticle:
     def __init__(self, url=''):
         self.url = url
@@ -24,6 +32,7 @@ class Briticle:
         html_parser = HTMLParser.HTMLParser()
         content = ""
         for kls in CONTENT_CLASSES:
+            print_info("searching div with class name: [%s] ..." % kls)
             if '-' in kls or len(kls) >= 8:
                 tags = self.soup.findAll("div", {"class": re.compile(kls)})
             else:
@@ -42,19 +51,31 @@ class Briticle:
             text = ''.join(max_tag.findAll(text=True))
             text = re.sub(r'\r*\n+', '\r\n\r\n', text)
             content = html_parser.unescape(text)
-            if len(content) > MIN_LIMIT: # content is too short
+            if len(content) > MIN_LIMIT:
+                print_info(" *** Found it!!! ***")
                 break
 
         if len(content) < MIN_LIMIT:
             for kls in CONTENT_IDS:
                 tag = self.soup.find("div", {"id": kls})
+                print_info("searching div with id name: [%s] ..." % kls)
                 if tag:
                     text = ''.join(tag.findAll(text=True))
                     text = re.sub(r'\r*\n+', '\r\n\r\n', text)
                     content = html_parser.unescape(text)
-                    if len(content) > MIN_LIMIT: # content is too short
+                    if len(content) > MIN_LIMIT:
+                        print_info(" *** Found it!!! ***")
                         break
-        self.content = content
+        
+        if len(content) < MIN_LIMIT:
+            max_div = self._search_main_div()
+            if max_div:
+                content = ''.join(max_div.findAll(text=True))
+
+        if len(content) < MIN_LIMIT:
+            self.content = ""
+        else:
+            self.content = content
 
     def open(self, url="", file_=""):
         if url:
@@ -67,6 +88,7 @@ class Briticle:
         self._deal_with_images()
         self._deal_with_pre_code()
         self._remove_meta_info()
+        print_info('begin getting content...')
         self._get_content()
 
     def _get_soup(self, url='', file_='', timeout=5):
@@ -111,6 +133,25 @@ class Briticle:
     def _deal_with_pre_code(self):
         for tag in self.soup.findAll('pre'):
             pass
+
+    def _search_main_div(self):
+        def find_max_div(tag):
+            tags = tag.findAll("div")
+            if not tags:
+                if not tag.findAll("p") or len(''.join(tag.findAll(text=True))) < MIN_LIMIT:
+                    return tag.parent
+                return tag
+
+            max_count = 0
+            max_div = None
+            for tag in tags:
+                text = ''.join(tag.findAll(text=True))
+                if len(text) > max_count:
+                    max_count = len(text)
+                    max_div = tag
+            return find_max_div(max_div)
+            
+        return find_max_div(self.soup)
 
     def _remove_meta_info(self):
         META_CLASSES = (
