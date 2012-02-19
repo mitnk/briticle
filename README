@@ -4,10 +4,9 @@ Requirements:
 
 - BeautifulSoup
 
-WARNNING:
+NOTE:
 
-This libiray does NOT suppose to be working perfectly. It's just a toy porject of mine. You may take a look at Readability if you interested: http://www.readability.com/publishers/api/
+This libiray does NOT suppose to be working perfectly, which is not possible. Everyone may difine divs in pages in every strange ways. You may take a look at Readability if you interested: http://www.readability.com/publishers/api/
 
-mitnk
-whgking@gmail.com
-
+- mitnk
+- whgking@gmail.com
