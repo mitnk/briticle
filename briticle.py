@@ -10,12 +10,13 @@ whgking@gmail.com
 
 import HTMLParser
 import re
+import urllib
 import urllib2
+from urlparse import urlparse
 
 from BeautifulSoup import BeautifulSoup, Comment
 
 VERBOSE = False
-
 
 
 def print_info(info):
@@ -24,6 +25,7 @@ def print_info(info):
 
 class Briticle:
     def __init__(self, url=''):
+        self.images = {}
         self.url = url
         if url:
             self.open(url)
@@ -52,6 +54,7 @@ class Briticle:
             text = re.sub(r'\r*\n+', '\r\n\r\n', text)
             content = html_parser.unescape(text)
             if len(content) > MIN_LIMIT:
+                self.content_html = unicode(max_tag)
                 print_info(" *** Found it!!! ***")
                 break
 
@@ -64,12 +67,16 @@ class Briticle:
                     text = re.sub(r'\r*\n+', '\r\n\r\n', text)
                     content = html_parser.unescape(text)
                     if len(content) > MIN_LIMIT:
+                        self.content_html = unicode(tag)
                         print_info(" *** Found it!!! ***")
                         break
         
         if len(content) < MIN_LIMIT:
+            print_info("searching main div without name ...")
             max_div = self._search_main_div()
             if max_div:
+                print_info(" *** Found it!!! ***")
+                self.content_html = unicode(max_div)
                 content = ''.join(max_div.findAll(text=True))
 
         if len(content) < MIN_LIMIT:
@@ -97,10 +104,7 @@ class Briticle:
         else:
             page = urllib2.urlopen(self.url, timeout=timeout)
 
-        try:
-            self.soup = BeautifulSoup(page, fromEncoding='utf8')
-        except UnicodeEncodeError:
-            self.soup = BeautifulSoup(page, fromEncoding='gb18030')
+        self.soup = BeautifulSoup(page, fromEncoding='utf8')
 
     def _remove_comment_js_css(self):
         for c in self.soup.findAll(text=lambda t:isinstance(t, Comment)):
@@ -111,10 +115,9 @@ class Briticle:
             style.extract()
 
     def _get_title(self):
-        title_tag = self.soup.find("title")
+        title_tag = self.soup.html.title
         if title_tag:
-            title = re.sub(r'[^a-zA-Z0-9_ -]+', '', self.soup.find("title").string)
-            title = title.strip().replace('  ', ' ').replace(' ', '_')
+            title = title_tag.string
         else:
             title = "No_Title_Found"
         self.title = title
@@ -127,8 +130,14 @@ class Briticle:
             tag.insert(0, "\n")
 
     def _deal_with_images(self):
+        i = 1
         for tag in self.soup.findAll('img'):
-            tag.replaceWith("\n" + IMAGE_TAG + "\n")
+            name, src = "%03d" % i, tag['src']
+            if not src.startswith('http') and self.url:
+                src = 'http://' + urlparse(self.url).netloc + "/" + src
+            self.images[name] = src
+            tag.replaceWith('\n[IMG' + name + ']\n')
+            i += 1
 
     def _deal_with_pre_code(self):
         for tag in self.soup.findAll('pre'):
@@ -180,8 +189,27 @@ class Briticle:
             for tag in self.soup.findAll("div", {"id": kls}):
                 tag.extract()
 
+    def _save_to_html(self, file_name, dir_name):
+        if not self.content_html:
+            raise Exception("No HTML content found.")
+
+        images = re.findall(r'\[IMG(\d{3})\]', self.content_html)
+        for img_index in images:
+            src = self.images[img_index]
+            image_ext = src.split(".")[-1]
+            image_name = "%s%s.%s" % (file_name, img_index, image_ext)
+            local_file_name = "%s/%s" % (dir_name, image_name)
+            urllib.urlretrieve(src, local_file_name)
+            self.content_html = self.content_html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
+
+        with open(dir_name + "/" + file_name, 'w') as f:
+            html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
+            html += u'<title>%s</title></head><body>' % self.title
+            html += self.content_html + '</body></html>'
+            f.write(html.encode('utf-8'))
+
+
 MIN_LIMIT = 50
-IMAGE_TAG = "[Image]"
 CONTENT_CLASSES = (
     "content",
     "entry-content", # wordpress
@@ -207,6 +235,7 @@ CONTENT_CLASSES = (
     "story", # techdirt.com
     "main",
     "text",
+    "post",
 )
 
 CONTENT_IDS = (

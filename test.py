@@ -1,66 +1,38 @@
-#encoding=UTF8
+#encoding=UTF-8
+
 import re
 import unittest
-from briticle import Briticle, IMAGE_TAG
+from briticle import Briticle
 
 OFF_SETS = 20
+IMAGE_TAG = r'\[IMG\d{3}\]'
+
 
 class TestBriticle(unittest.TestCase):
-    def testAMixDk(self):
-        br = Briticle()
-        br.open(file_="./tests/amix.dk.html")
-        c = re.sub(r'\n', '', br.content)
-        self.assertTrue(abs(len(c) - 2362) < OFF_SETS)
 
-    def testMitnkCom1(self):
-        br = Briticle()
-        br.open(file_="./tests/mitnk.com1.html")
-        self.assertEqual(br.title, u"Linux_cut")
-        self.assertTrue(u"列出系统所有用户" in br.content)
-        self.assertTrue(u'cat /etc/passwd | cut -d ":" -f 1' in br.content)
+    def testFileList(self):
+        file_list = (
+            ("tests/amix.dk.html", 2362),
+            ("tests/37signal_post.html", 2831),
+            ("tests/lixiaolai.com1.html", 875),
+            ("tests/thenextweb.com.html", 1440),
+            ("tests/github_project.html", 1317),
+            ("tests/petzl.com.html", 3761),
+            ("tests/weebly.com.html", 2899),
+            ("tests/div_without_attrs.html", 1024),
+        )
 
-    def testMitnkCom2(self):
+        for f, count in file_list:
+            br = Briticle()
+            br.open(file_=f)
+            c = re.sub(r'\n|%s' % IMAGE_TAG, '', br.content)
+            self.assertTrue(abs(len(c) - count) < OFF_SETS)
+    
+    def testTitle(self):
         br = Briticle()
         br.open(file_="./tests/mitnk.com2.html")
-        self.assertEqual(br.title, u"KISS")
-        c = re.sub(r'\n', '', br.content)
-        self.assertTrue(abs(len(c) - 2127) < OFF_SETS)
+        self.assertEqual(br.title, u'KISS\u539f\u5219')
 
-    def testWordPress(self):
-        br = Briticle()
-        br.open(file_="./tests/lixiaolai.com1.html")
-        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
-        self.assertTrue(abs(len(c) - 875) < OFF_SETS)
-
-    def testTheNextWeb(self):
-        br = Briticle()
-        br.open(file_="./tests/thenextweb.com.html")
-        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
-        self.assertTrue(abs(len(c) - 1440) < OFF_SETS)
-
-    def testGitHubProjectPage(self):
-        br = Briticle()
-        br.open(file_="./tests/github_project.html")
-        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
-        self.assertTrue(abs(len(c) - 1317) < OFF_SETS)
-
-    def testClassContent(self):
-        br = Briticle()
-        br.open(file_="./tests/petzl.com.html")
-        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
-        self.assertTrue(abs(len(c) - 3761) < OFF_SETS)
-
-    def testWeeblyCom(self):
-        br = Briticle()
-        br.open(file_="./tests/weebly.com.html")
-        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
-        self.assertTrue(abs(len(c) - 2899) < OFF_SETS)
-
-    def testDivWithoutNames(self):
-        br = Briticle()
-        br.open(file_="./tests/div_without_attrs.html")
-        c = re.sub(r'\n', '', br.content).replace(IMAGE_TAG, "")
-        self.assertTrue(abs(len(c) - 1024) < OFF_SETS)
 
 if __name__ == "__main__":
     unittest.main()
