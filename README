@@ -2,7 +2,7 @@ Fetch blog articles via URLs.
 
 Requirements:
 
-- BeautifulSoup
+- BeautifulSoup 4
 
 NOTE:
 

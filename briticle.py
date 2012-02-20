@@ -15,7 +15,8 @@ import urllib2
 from urlparse import urlparse
 import os.path
 
-from BeautifulSoup import BeautifulSoup, Comment
+from bs4 import BeautifulSoup
+from bs4.element import Comment
 
 VERBOSE = False
 
@@ -31,9 +32,25 @@ class Briticle:
         if url:
             self.open(url)
 
-    def _get_content(self):
+    def _parse_raw_text(self, txt):
         html_parser = HTMLParser.HTMLParser()
-        content = ""
+        txt = re.sub(r'\t', '', txt)
+        txt = re.sub(r'\r', '', txt)
+        txt = re.sub(r'\n+', '\n\n', txt)
+        return html_parser.unescape(txt)
+
+    def _search_article_tag(self):
+        """ Using HTML5 <article> tag """
+        tag = self.soup.article
+        if tag:
+            self.content = self._parse_raw_text(''.join(tag.findAll(text=True)))
+            self.content_html = unicode(tag)
+            print_info(" *** Found it!!! ***")
+            return True
+        return False
+
+    def _search_div_class(self):
+        """ Get content with <div> class names """
         for kls in CONTENT_CLASSES:
             print_info("searching div with class name: [%s] ..." % kls)
             if '-' in kls or len(kls) >= 8:
@@ -51,44 +68,53 @@ class Briticle:
                     length = len(text)
                     max_tag = tag
 
-            text = ''.join(max_tag.findAll(text=True))
-            text = re.sub(r'\r*\n+', '\r\n\r\n', text)
-            content = html_parser.unescape(text)
+            content = self._parse_raw_text(''.join(max_tag.findAll(text=True)))
             if len(content) > MIN_LIMIT:
+                self.content = content
                 self.content_html = unicode(max_tag)
                 print_info(" *** Found it!!! ***")
-                break
-
-        if len(content) < MIN_LIMIT:
-            for kls in CONTENT_IDS:
-                tag = self.soup.find("div", {"id": kls})
-                print_info("searching div with id name: [%s] ..." % kls)
-                if tag:
-                    text = ''.join(tag.findAll(text=True))
-                    text = re.sub(r'\r*\n+', '\r\n\r\n', text)
-                    content = html_parser.unescape(text)
-                    if len(content) > MIN_LIMIT:
-                        self.content_html = unicode(tag)
-                        print_info(" *** Found it!!! ***")
-                        break
+                return True
+        return False
         
-        if len(content) < MIN_LIMIT:
-            print_info("searching main div without name ...")
-            max_div = self._search_main_div()
-            if max_div:
+    def _search_div_id(self):
+        """ Search tags with <div> IDs """
+        for kls in CONTENT_IDS:
+            print_info("searching div with ID name: [%s] ..." % kls)
+            tag = self.soup.find("div", {"id": kls})
+            if not tag:
+                continue
+            content = self._parse_raw_text(''.join(tag.findAll(text=True)))
+            if len(content) > MIN_LIMIT:
+                self.content = content
+                self.content_html = unicode(tag)
                 print_info(" *** Found it!!! ***")
-                self.content_html = unicode(max_div)
-                content = ''.join(max_div.findAll(text=True))
+                return True
+        return False
 
-        if len(content) < MIN_LIMIT:
-            self.content = ""
-        else:
-            self.content = content
+    def _search_main_div(self):
+        """ Try to find the main div tag with <p> inside """
+        print_info("searching main div without name ...")
+        tag = self._search_main_tag()
+        if tag:
+            print_info(" *** Found it!!! ***")
+            self.content_html = unicode(tag)
+            self.content = self._parse_raw_text(''.join(tag.findAll(text=True)))
+            return True
+        return False
+
+    def _get_content(self):
+        # Stop searching if any of these methods return True
+        print_info('Begin getting content...')
+        self._search_article_tag() or \
+        self._search_div_class() or \
+        self._search_div_id() or \
+        self._search_main_div()
+        if len(self.content) < MIN_LIMIT:
+            self.content = self.content_html = ""
 
     def open(self, url="", file_=""):
         if url:
             self.url = url
-
         self._get_soup(url, file_)
         self._remove_comment_js_css()
         self._get_title()
@@ -96,7 +122,6 @@ class Briticle:
         self._deal_with_images()
         self._deal_with_pre_code()
         self._remove_meta_info()
-        print_info('begin getting content...')
         self._get_content()
 
     def _get_soup(self, url='', file_='', timeout=5):
@@ -104,8 +129,7 @@ class Briticle:
             page = open(file_)
         else:
             page = urllib2.urlopen(self.url, timeout=timeout)
-
-        self.soup = BeautifulSoup(page, fromEncoding='utf8')
+        self.soup = BeautifulSoup(page, from_encoding='utf8')
 
     def _remove_comment_js_css(self):
         for c in self.soup.findAll(text=lambda t:isinstance(t, Comment)):
@@ -144,7 +168,7 @@ class Briticle:
         for tag in self.soup.findAll('pre'):
             pass
 
-    def _search_main_div(self):
+    def _search_main_tag(self):
         def find_max_div(tag):
             tags = tag.findAll("div")
             if not tags:
@@ -176,6 +200,7 @@ class Briticle:
             "sharing-",
             "author",
             "related_articles",
+            "post_header",
         )
 
         META_IDS = (
@@ -206,8 +231,9 @@ class Briticle:
         file_path = os.path.join(dir_name, file_name)
         with open(file_path, 'w') as f:
             html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
-            html += u'<title>%s</title></head><body>' % self.title
-            html += self.content_html + '</body></html>'
+            html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
+            html += self.content_html
+            html += '<br/><a href="%s">Original URL</body></html>' % self.url
             f.write(html.encode('utf-8'))
 
         return file_path

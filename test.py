@@ -12,21 +12,23 @@ class TestBriticle(unittest.TestCase):
 
     def testFileList(self):
         file_list = (
-            ("tests/amix.dk.html", 2362),
-            ("tests/37signal_post.html", 2831),
-            ("tests/lixiaolai.com1.html", 875),
-            ("tests/thenextweb.com.html", 1440),
-            ("tests/github_project.html", 1317),
-            ("tests/petzl.com.html", 3761),
-            ("tests/weebly.com.html", 2899),
-            ("tests/div_without_attrs.html", 1024),
+            ("tests/article_tag.html", 2412),
+            ("tests/amix.dk.html", 2294),
+            ("tests/37signal_post.html", 2736),
+            ("tests/lixiaolai.com1.html", 834),
+            ("tests/thenextweb.com.html", 1450),
+            ("tests/github_project.html", 1277),
+            ("tests/petzl.com.html", 3721),
+            ("tests/weebly.com.html", 2872),
+            ("tests/div_without_attrs.html", 1115),
         )
 
         for f, count in file_list:
             br = Briticle()
             br.open(file_=f)
             c = re.sub(r'\n|%s' % IMAGE_TAG, '', br.content)
-            self.assertTrue(abs(len(c) - count) < OFF_SETS)
+            self.assertEqual(len(c), count)
+            self.assertTrue(len(br.content_html) > len(br.content))
     
     def testTitle(self):
         br = Briticle()
