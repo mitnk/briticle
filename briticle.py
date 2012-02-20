@@ -27,6 +27,7 @@ def print_info(info):
 
 class Briticle:
     def __init__(self, url=''):
+        self.content = self.content_html = ""
         self.images = {}
         self.url = url
         if url:
