@@ -232,6 +232,7 @@ class Briticle:
             "related_articles",
             "post_header",
             "comment",
+            "widget-",
         )
 
         META_IDS = (
@@ -283,6 +284,7 @@ CONTENT_CLASSES = (
     "entry-content", # wordpress
     "highlightText", # only for kindle share
     "article-body", # thenextweb.com
+    "-post",
     "BlogText",
     "articleContent",
     "entry-body",
