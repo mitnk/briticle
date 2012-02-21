@@ -231,11 +231,14 @@ class Briticle:
             "author",
             "related_articles",
             "post_header",
+            "comment",
         )
 
         META_IDS = (
             "commentArea",
             "commentText",
+            "comment",
+            "comments",
         )
 
         for kls in META_CLASSES:
