@@ -223,7 +223,7 @@ class Briticle:
             for tag in self.soup.find_all("div", {"id": kls}):
                 tag.extract()
 
-    def _save_to_html(self, file_name, dir_name):
+    def _save_to_html(self, file_name, dir_name, title=""):
         if not self.content_html:
             raise Exception("No HTML content found.")
 
@@ -241,7 +241,10 @@ class Briticle:
         file_path = os.path.join(dir_name, file_name)
         with open(file_path, 'w') as f:
             html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
-            html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
+            if title:
+                html += u'<title>%s</title></head><body><h1>%s</h1>' % (title, title)
+            else:
+                html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
             html += self.content_html
             html += '<br/><a href="%s">Original URL</body></html>' % self.url
             f.write(html.encode('utf-8'))
