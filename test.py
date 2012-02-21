@@ -9,6 +9,8 @@ IMAGE_TAG = r'\[IMG\d{3}\]'
 
 
 class TestBriticle(unittest.TestCase):
+    def assertAlmostEqual(self):
+        pass
 
     def testFileList(self):
         file_list = (
@@ -44,6 +46,45 @@ class TestBriticle(unittest.TestCase):
         br.open(file_="./tests/mitnk.com2.html")
         self.assertEqual(br.title, u'KISS\u539f\u5219')
 
+    def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
+        """
+        Port from Python 2.7.1
+        Fail if the two objects are unequal as determined by their
+           difference rounded to the given number of decimal places
+           (default 7) and comparing to zero, or by comparing that the
+           between the two objects is more than the given delta.
+
+           Note that decimal places (from zero) are usually not the same
+           as significant digits (measured from the most signficant digit).
+
+           If the two objects compare equal then they will automatically
+           compare almost equal.
+        """
+        if first == second:
+            # shortcut
+            return
+        if delta is not None and places is not None:
+            raise TypeError("specify delta or places not both")
+
+        if delta is not None:
+            if abs(first - second) <= delta:
+                return
+
+            standardMsg = '%s != %s within %s delta' % (safe_repr(first),
+                                                        safe_repr(second),
+                                                        safe_repr(delta))
+        else:
+            if places is None:
+                places = 7
+
+            if round(abs(second-first), places) == 0:
+                return
+
+            standardMsg = '%s != %s within %r places' % (safe_repr(first),
+                                                          safe_repr(second),
+                                                          places)
+        msg = self._formatMessage(msg, standardMsg)
+        raise self.failureException(msg)
 
 if __name__ == "__main__":
     unittest.main()
