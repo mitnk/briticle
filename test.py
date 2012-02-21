@@ -21,6 +21,8 @@ class TestBriticle(unittest.TestCase):
             ("tests/petzl.com.html", 3721),
             ("tests/weebly.com.html", 2872),
             ("tests/div_without_attrs.html", 1115),
+            ("tests/div_without_attrs2.html", 4525),
+            ("tests/div_without_attrs3.html", 21297),
         )
 
         for f, count in file_list:

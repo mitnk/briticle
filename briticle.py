@@ -174,6 +174,28 @@ class Briticle:
         pass
 
     def _search_main_tag(self):
+        ## Try to find H1 tag, whiose content should big enough (like over 1K)
+        MAIN_CONTENT_LENGTH_LIMIT = 1000
+        div_with_h1 = None
+        count_div_with_h1 = 0
+        max_size = 0
+        parents_div_with_h1 = []
+        for tag in self.soup.find_all("div"):
+            for child in tag.children:
+                if hasattr(child, 'name') and child.name == "h1":
+                    count_div_with_h1 += 1
+                    if tag.parent not in parents_div_with_h1:
+                        parents_div_with_h1.append(tag.parent)
+                    size = len(''.join(tag.find_all(text=True)))
+                    if size > max_size:
+                        max_size = size
+                        div_with_h1 = tag
+                    break
+        if count_div_with_h1 > 1 and len(parents_div_with_h1) == 1:
+            return parents_div_with_h1[0]
+        elif div_with_h1 and max_size > MAIN_CONTENT_LENGTH_LIMIT:
+            return div_with_h1
+
         def find_max_div(tag_to_search):
             tags = tag_to_search.find_all("div")
             if not tags:
