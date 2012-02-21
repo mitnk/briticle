@@ -161,6 +161,8 @@ class Briticle:
     def _deal_with_images(self):
         i = 1
         for tag in self.soup.find_all('img'):
+            if 'src' not in tag.attrs:
+                continue
             name, src = "%03d" % i, tag['src']
             if not src.startswith('http') and self.url:
                 src = 'http://' + urlparse(self.url).netloc + "/" + src
@@ -169,14 +171,14 @@ class Briticle:
             i += 1
 
     def _deal_with_pre_code(self):
-        for tag in self.soup.find_all('pre'):
-            pass
+        pass
 
     def _search_main_tag(self):
         def find_max_div(tag_to_search):
             tags = tag_to_search.find_all("div")
             if not tags:
-                if not tag_to_search.find_all("p") or len(''.join(tag_to_search.find_all(text=True))) < MIN_LIMIT:
+                if (not tag_to_search.find_all("p")) or \
+                    (len(''.join(tag_to_search.find_all(text=True))) < MIN_LIMIT):
                     return tag_to_search.parent
                 return tag_to_search
 
