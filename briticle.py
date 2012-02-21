@@ -33,6 +33,9 @@ class Briticle:
         if url:
             self.open(url)
 
+    def is_empty(self):
+        return len(self.content) < MIN_LIMIT
+
     def _parse_raw_text(self, txt):
         html_parser = HTMLParser.HTMLParser()
         txt = re.sub(r'\t', '', txt)
@@ -44,7 +47,7 @@ class Briticle:
         """ Using HTML5 <article> tag """
         tag = self.soup.article
         if tag:
-            self.content = self._parse_raw_text(''.join(tag.findAll(text=True)))
+            self.content = self._parse_raw_text(''.join(tag.find_all(text=True)))
             self.content_html = unicode(tag)
             print_info(" *** Found it!!! ***")
             return True
@@ -55,21 +58,21 @@ class Briticle:
         for kls in CONTENT_CLASSES:
             print_info("searching div with class name: [%s] ..." % kls)
             if '-' in kls or len(kls) >= 8:
-                tags = self.soup.findAll("div", {"class": re.compile(kls)})
+                tags = self.soup.find_all("div", {"class": re.compile(kls)})
             else:
-                tags = self.soup.findAll("div", {"class": kls})
+                tags = self.soup.find_all("div", {"class": kls})
             if not tags:
                 continue
 
             length = 0
             max_tag = None
             for tag in tags:
-                text = ''.join(tag.findAll(text=True))
+                text = ''.join(tag.find_all(text=True))
                 if len(text) > length:
                     length = len(text)
                     max_tag = tag
 
-            content = self._parse_raw_text(''.join(max_tag.findAll(text=True)))
+            content = self._parse_raw_text(''.join(max_tag.find_all(text=True)))
             if len(content) > MIN_LIMIT:
                 self.content = content
                 self.content_html = unicode(max_tag)
@@ -84,7 +87,7 @@ class Briticle:
             tag = self.soup.find("div", {"id": kls})
             if not tag:
                 continue
-            content = self._parse_raw_text(''.join(tag.findAll(text=True)))
+            content = self._parse_raw_text(''.join(tag.find_all(text=True)))
             if len(content) > MIN_LIMIT:
                 self.content = content
                 self.content_html = unicode(tag)
@@ -99,7 +102,7 @@ class Briticle:
         if tag:
             print_info(" *** Found it!!! ***")
             self.content_html = unicode(tag)
-            self.content = self._parse_raw_text(''.join(tag.findAll(text=True)))
+            self.content = self._parse_raw_text(''.join(tag.find_all(text=True)))
             return True
         return False
 
@@ -133,11 +136,11 @@ class Briticle:
         self.soup = BeautifulSoup(page, from_encoding='utf8')
 
     def _remove_comment_js_css(self):
-        for c in self.soup.findAll(text=lambda t:isinstance(t, Comment)):
+        for c in self.soup.find_all(text=lambda t:isinstance(t, Comment)):
             c.extract()
-        for style in self.soup.findAll("style"):
+        for style in self.soup.find_all("style"):
             style.extract()
-        for style in self.soup.findAll("script"):
+        for style in self.soup.find_all("script"):
             style.extract()
 
     def _get_title(self):
@@ -149,41 +152,43 @@ class Briticle:
         self.title = title
 
     def _deal_with_line_breaks(self):
-        for tag in self.soup.findAll('br'):
-            tag.replaceWith("\n")
+        for tag in self.soup.find_all('br'):
+            tag.replace_with("\n")
 
-        for tag in self.soup.findAll('p'):
+        for tag in self.soup.find_all('p'):
             tag.insert(0, "\n")
 
     def _deal_with_images(self):
         i = 1
-        for tag in self.soup.findAll('img'):
+        for tag in self.soup.find_all('img'):
             name, src = "%03d" % i, tag['src']
             if not src.startswith('http') and self.url:
                 src = 'http://' + urlparse(self.url).netloc + "/" + src
             self.images[name] = src
-            tag.replaceWith('\n[IMG' + name + ']\n')
+            tag.replace_with('\n[IMG' + name + ']\n')
             i += 1
 
     def _deal_with_pre_code(self):
-        for tag in self.soup.findAll('pre'):
+        for tag in self.soup.find_all('pre'):
             pass
 
     def _search_main_tag(self):
-        def find_max_div(tag):
-            tags = tag.findAll("div")
+        def find_max_div(tag_to_search):
+            tags = tag_to_search.find_all("div")
             if not tags:
-                if not tag.findAll("p") or len(''.join(tag.findAll(text=True))) < MIN_LIMIT:
-                    return tag.parent
-                return tag
+                if not tag_to_search.find_all("p") or len(''.join(tag_to_search.find_all(text=True))) < MIN_LIMIT:
+                    return tag_to_search.parent
+                return tag_to_search
 
             max_count = 0
             max_div = None
             for tag in tags:
-                text = ''.join(tag.findAll(text=True))
+                text = ''.join(tag.find_all(text=True))
                 if len(text) > max_count:
                     max_count = len(text)
                     max_div = tag
+            if not max_div:
+                return tag_to_search
             return find_max_div(max_div)
             
         return find_max_div(self.soup)
@@ -210,10 +215,10 @@ class Briticle:
         )
 
         for kls in META_CLASSES:
-            for tag in self.soup.findAll("div", {"class": re.compile(kls)}):
+            for tag in self.soup.find_all("div", {"class": re.compile(kls)}):
                 tag.extract()
         for kls in META_IDS:
-            for tag in self.soup.findAll("div", {"id": kls}):
+            for tag in self.soup.find_all("div", {"id": kls}):
                 tag.extract()
 
     def _save_to_html(self, file_name, dir_name):
