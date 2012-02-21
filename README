@@ -3,13 +3,15 @@ Fetch blog articles via URLs.
 Requirements:
 
 - BeautifulSoup 4
-- html5lib (*)
+- html5lib / lxml (*)
 
 NOTE:
 
 This libiray does NOT suppose to be working perfectly, which is not possible. Everyone may difine divs in pages in every strange ways. You may take a look at Readability if you interested: http://www.readability.com/publishers/api/
 
 * Required by BeautifulSoup 4 to parser some pages. If not, HTMLParseError may occur.
+* You can choose either of them, both can pass the unit tests (Run it to make sure it is).
+* I am using lxml, it's faster.
 
 - mitnk
 - whgking@gmail.com

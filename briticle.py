@@ -47,7 +47,7 @@ class Briticle:
         """ Using HTML5 <article> tag """
         tag = self.soup.article
         if tag:
-            self.content = self._parse_raw_text(''.join(tag.find_all(text=True)))
+            self.content = self._parse_raw_text(tag.get_text())
             self.content_html = unicode(tag)
             print_info(" *** Found it!!! ***")
             return True
@@ -67,12 +67,12 @@ class Briticle:
             length = 0
             max_tag = None
             for tag in tags:
-                text = ''.join(tag.find_all(text=True))
+                text = tag.get_text()
                 if len(text) > length:
                     length = len(text)
                     max_tag = tag
 
-            content = self._parse_raw_text(''.join(max_tag.find_all(text=True)))
+            content = self._parse_raw_text(max_tag.get_text())
             if len(content) > MIN_LIMIT:
                 self.content = content
                 self.content_html = unicode(max_tag)
@@ -87,7 +87,7 @@ class Briticle:
             tag = self.soup.find("div", {"id": kls})
             if not tag:
                 continue
-            content = self._parse_raw_text(''.join(tag.find_all(text=True)))
+            content = self._parse_raw_text(tag.get_text())
             if len(content) > MIN_LIMIT:
                 self.content = content
                 self.content_html = unicode(tag)
@@ -102,7 +102,7 @@ class Briticle:
         if tag:
             print_info(" *** Found it!!! ***")
             self.content_html = unicode(tag)
-            self.content = self._parse_raw_text(''.join(tag.find_all(text=True)))
+            self.content = self._parse_raw_text(tag.get_text())
             return True
         return False
 
@@ -186,7 +186,7 @@ class Briticle:
                     count_div_with_h1 += 1
                     if tag.parent not in parents_div_with_h1:
                         parents_div_with_h1.append(tag.parent)
-                    size = len(''.join(tag.find_all(text=True)))
+                    size = len(tag.get_text())
                     if size > max_size:
                         max_size = size
                         div_with_h1 = tag
@@ -200,14 +200,14 @@ class Briticle:
             tags = tag_to_search.find_all("div")
             if not tags:
                 if (not tag_to_search.find_all("p")) or \
-                    (len(''.join(tag_to_search.find_all(text=True))) < MIN_LIMIT):
+                    (len(tag_to_search.get_text()) < MIN_LIMIT):
                     return tag_to_search.parent
                 return tag_to_search
 
             max_count = 0
             max_div = None
             for tag in tags:
-                text = ''.join(tag.find_all(text=True))
+                text = tag.get_text()
                 if len(text) > max_count:
                     max_count = len(text)
                     max_div = tag
