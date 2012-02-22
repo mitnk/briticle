@@ -276,8 +276,9 @@ class Briticle:
             self.content_html = self.content_html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
 
         txt_file = os.path.join(dir_name, file_name + '.txt')
-        with open(html_file, 'w') as f:
+        with open(txt_file, 'w') as f:
             f.write(self.content)
+            f.write("\n\n" + self.url)
 
         html_file = os.path.join(dir_name, file_name + '.html')
         with open(html_file, 'w') as f:
