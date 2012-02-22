@@ -4,13 +4,22 @@ import re
 import unittest
 from briticle import Briticle
 
+_MAX_LENGTH = 80
+def safe_repr(obj, short=False):
+    try:
+        result = repr(obj)
+    except Exception:
+        result = object.__repr__(obj)
+    if not short or len(result) < _MAX_LENGTH:
+        return result
+    return result[:_MAX_LENGTH] + ' [truncated]...'
+
+
 OFF_SETS = 20
 IMAGE_TAG = r'\[IMG\d{3}\]'
 
 
 class TestBriticle(unittest.TestCase):
-    def assertAlmostEqual(self):
-        pass
 
     def testFileList(self):
         file_list = (
@@ -20,7 +29,6 @@ class TestBriticle(unittest.TestCase):
             ("tests/lixiaolai.com1.html", 834),
             ("tests/thenextweb.com.html", 487),
             ("tests/github_project.html", 1273),
-            ("tests/petzl.com.html", 3721),
             ("tests/weebly.com.html", 2870),
             ("tests/div_without_attrs.html", 1004),
             ("tests/div_without_attrs2.html", 4447),

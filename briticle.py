@@ -222,16 +222,18 @@ class Briticle:
             "post-bottom-area",
             "wp-caption", # wordpress images
             "entryDescription", # wired.com
+            "toolsListContainer",
             "BlogEntryInfo",
             "post-meta",
-            "footnotes",
+            "entry-meta",
+            "entry-related",
             "addthis_toolbox",
             "widget-area",
             "sharing-",
-            "author",
-            "related_articles",
+            "related",
             "post_header",
             "comment",
+            "comments",
             "widget-",
         )
 
@@ -243,7 +245,7 @@ class Briticle:
         )
 
         for kls in META_CLASSES:
-            for tag in self.soup.find_all("div", {"class": re.compile(kls)}):
+            for tag in self.soup.find_all(attrs=re.compile(kls)):
                 tag.extract()
         for kls in META_IDS:
             for tag in self.soup.find_all("div", {"id": kls}):
@@ -280,7 +282,6 @@ class Briticle:
 
 MIN_LIMIT = 50
 CONTENT_CLASSES = (
-    "content",
     "entry-content", # wordpress
     "highlightText", # only for kindle share
     "article-body", # thenextweb.com
