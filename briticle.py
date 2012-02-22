@@ -272,7 +272,7 @@ class Briticle:
             else:
                 html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
             html += self.content_html
-            html += '<br/><a href="%s">Original URL</body></html>' % self.url
+            html += '<br/><a href="%s">Original URL</a>, Sent by mitnk.com</body></html>' % self.url
             f.write(html.encode('utf-8'))
 
         return file_path
