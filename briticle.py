@@ -121,6 +121,7 @@ class Briticle:
             self.url = url
         self._get_soup(url, file_)
         self._remove_comment_js_css()
+        self._remove_useless_tags()
         self._get_title()
         self._deal_with_line_breaks()
         self._deal_with_images()
@@ -134,6 +135,10 @@ class Briticle:
         else:
             page = urllib2.urlopen(self.url, timeout=timeout)
         self.soup = BeautifulSoup(page, from_encoding='utf8')
+
+    def _remove_useless_tags(self):
+        for tag in self.soup.find_all("form"):
+            tag.extract()
 
     def _remove_comment_js_css(self):
         for c in self.soup.find_all(text=lambda t:isinstance(t, Comment)):
@@ -235,6 +240,7 @@ class Briticle:
             "comment",
             "comments",
             "widget-",
+            "links",
         )
 
         META_IDS = (
