@@ -257,7 +257,10 @@ class Briticle:
             for tag in self.soup.find_all("div", {"id": kls}):
                 tag.extract()
 
-    def _save_to_html(self, file_name, dir_name, title=""):
+    def save_to_files(self, file_name, dir_name, title=""):
+        assert(not file_name.endswith(".html"))
+        assert(not file_name.endswith(".txt"))
+
         if not self.content_html:
             raise Exception("No HTML content found.")
 
@@ -267,13 +270,17 @@ class Briticle:
             image_ext = src.split(".")[-1]
             if len(image_ext) != 3:
                 continue
-            image_name = "%s%s.%s" % (file_name, img_index, image_ext)
+            image_name = "%s_%s.%s" % (file_name, img_index, image_ext)
             local_file_name = os.path.join(dir_name, image_name)
             urllib.urlretrieve(src, local_file_name)
             self.content_html = self.content_html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
 
-        file_path = os.path.join(dir_name, file_name)
-        with open(file_path, 'w') as f:
+        txt_file = os.path.join(dir_name, file_name + '.txt')
+        with open(html_file, 'w') as f:
+            f.write(self.content)
+
+        html_file = os.path.join(dir_name, file_name + '.html')
+        with open(html_file, 'w') as f:
             html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
             if title:
                 html += u'<title>%s</title></head><body><h1>%s</h1>' % (title, title)
@@ -283,7 +290,7 @@ class Briticle:
             html += '<br/><a href="%s">Original URL</a>, Sent by mitnk.com</body></html>' % self.url
             f.write(html.encode('utf-8'))
 
-        return file_path
+        return html_file
 
 
 MIN_LIMIT = 50
