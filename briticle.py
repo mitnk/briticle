@@ -9,11 +9,13 @@ whgking@gmail.com
 """
 
 import HTMLParser
+import os
+import os.path
 import re
+import subprocess
 import urllib
 import urllib2
 from urlparse import urlparse
-import os.path
 
 from bs4 import BeautifulSoup
 from bs4.element import Comment
@@ -34,7 +36,7 @@ class Briticle:
             self.open(url)
 
     def is_empty(self):
-        return len(self.content) < MIN_LIMIT
+        return len(self.content) < MIN_LIMIT or len(self.content_html) < MIN_LIMIT
 
     def _parse_raw_text(self, txt):
         html_parser = HTMLParser.HTMLParser()
@@ -125,7 +127,6 @@ class Briticle:
         self._get_title()
         self._deal_with_line_breaks()
         self._deal_with_images()
-        self._deal_with_pre_code()
         self._remove_meta_info()
         self._get_content()
 
@@ -174,9 +175,6 @@ class Briticle:
             self.images[name] = src
             tag.replace_with('\n[IMG' + name + ']\n')
             i += 1
-
-    def _deal_with_pre_code(self):
-        pass
 
     def _search_main_tag(self):
         ## Try to find H1 tag, whiose content should big enough (like over 1K)
@@ -257,12 +255,34 @@ class Briticle:
             for tag in self.soup.find_all("div", {"id": kls}):
                 tag.extract()
 
-    def save_to_files(self, file_name, dir_name, title=""):
-        assert(not file_name.endswith(".html"))
-        assert(not file_name.endswith(".txt"))
+    def save_to_file(self, dir_name, title=""):
+        assert(not self.is_empty())
 
-        if not self.content_html:
-            raise Exception("No HTML content found.")
+        def _clean_temp_files():
+            """ Remove images using in the html file """
+            file_list = os.listdir(dir_name)
+            for f in file_list:
+                f = dir_name + "/" + f
+                if os.path.isdir(f):
+                    continue
+                if not f.endswith(".mobi") and not f.endswith(".txt"):
+                    os.remove(f)
+
+        def _generate_mobi():
+            nut_mobi_name = re.sub(r'.html$', '.mobi', (html_file.split('/')[-1]))
+            cmd = ["kindlegen", html_file, "-o", nut_mobi_name]
+            subprocess.call(cmd)
+            mobi_file = re.sub(r'\.html$', '.mobi', html_file)
+            if not os.path.exists(mobi_file):
+                return None
+            return mobi_file
+
+        if title:
+            file_name = re.sub(r'[^0-9a-zA-Z _-]+', '', title).replace(' ', '_')
+        else:
+            file_name = re.sub(r'[^0-9a-zA-Z _-]+', '', self.title).replace(' ', '_')
+        if not file_name:
+            file_name = "Untitled_Documentation"
 
         images = re.findall(r'\[IMG(\d{3})\]', self.content_html)
         for img_index in images:
@@ -275,11 +295,6 @@ class Briticle:
             urllib.urlretrieve(src, local_file_name)
             self.content_html = self.content_html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
 
-        txt_file = os.path.join(dir_name, file_name + '.txt')
-        with open(txt_file, 'w') as f:
-            f.write(self.content.encode('utf-8'))
-            f.write(u"\n\n" + unicode(self.url))
-
         html_file = os.path.join(dir_name, file_name + '.html')
         with open(html_file, 'w') as f:
             html = '<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
@@ -290,10 +305,20 @@ class Briticle:
             html += self.content_html
             html += '<br/><a href="%s">Original URL</a>, Sent by mitnk.com</body></html>' % self.url
             f.write(html.encode('utf-8'))
-        return html_file
+        mobi_file = _generate_mobi()
+        _clean_temp_files()
+
+        # Create a txt file if mobi file failed to generated
+        if not mobi_file:
+            txt_file = os.path.join(dir_name, file_name + '.txt')
+            with open(txt_file, 'w') as f:
+                f.write(self.content.encode('utf-8'))
+                f.write(u"\n\n" + unicode(self.url))
+            return txt_file
+        return mobi_file
 
 
-MIN_LIMIT = 50
+MIN_LIMIT = 60
 CONTENT_CLASSES = (
     "entry-content", # wordpress
     "highlightText", # only for kindle share
