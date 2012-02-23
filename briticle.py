@@ -277,20 +277,19 @@ class Briticle:
 
         txt_file = os.path.join(dir_name, file_name + '.txt')
         with open(txt_file, 'w') as f:
-            f.write(self.content)
-            f.write("\n\n" + self.url)
+            f.write(self.content.encode('utf-8'))
+            f.write(u"\n\n" + unicode(self.url))
 
         html_file = os.path.join(dir_name, file_name + '.html')
         with open(html_file, 'w') as f:
-            html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
+            html = '<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
             if title:
-                html += u'<title>%s</title></head><body><h1>%s</h1>' % (title, title)
+                html += '<title>%s</title></head><body><h1>%s</h1>' % (title, title)
             else:
-                html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
+                html += '<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
             html += self.content_html
             html += '<br/><a href="%s">Original URL</a>, Sent by mitnk.com</body></html>' % self.url
             f.write(html.encode('utf-8'))
-
         return html_file
 
 
