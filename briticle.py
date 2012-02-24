@@ -323,6 +323,7 @@ CONTENT_CLASSES = (
     "entry-content", # wordpress
     "highlightText", # only for kindle share
     "article-body", # thenextweb.com
+    "body-copy", # techcrunch.com
     "-post",
     "BlogText",
     "articleContent",
