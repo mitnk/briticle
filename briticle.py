@@ -289,7 +289,8 @@ class Briticle:
             src = self.images[img_index]
             image_ext = src.split(".")[-1]
             if len(image_ext) != 3:
-                continue
+                # Guess a ext when there isn't
+                image_ext = "png"
             image_name = "%s_%s.%s" % (file_name, img_index, image_ext)
             local_file_name = os.path.join(dir_name, image_name)
             urllib.urlretrieve(src, local_file_name)
