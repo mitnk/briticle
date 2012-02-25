@@ -308,7 +308,7 @@ class Briticle:
                 netloc = urlparse(self.url).netloc
                 netloc = ".".join(netloc.split(".")[-2:])
             except:
-                netloc = self.url
+                netloc = "Original URL"
             html += '<br/>From <a href="%s">%s</a>. Sent by mitnk.com</body></html>' % (self.url, netloc)
             f.write(html.encode('utf-8'))
         mobi_file = _generate_mobi()
