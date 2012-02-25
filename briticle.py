@@ -134,7 +134,9 @@ class Briticle:
         if file_:
             page = open(file_)
         else:
-            page = urllib2.urlopen(self.url, timeout=timeout)
+            opener = urllib2.build_opener()
+            opener.addheaders = [('User-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7) Gecko/20100101 Firefox/10.0.2')]
+            page = opener.open(self.url, timeout=timeout)
         self.soup = BeautifulSoup(page, from_encoding='utf8')
 
     def _remove_useless_tags(self):
