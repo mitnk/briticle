@@ -304,7 +304,12 @@ class Briticle:
             else:
                 html += '<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
             html += self.content_html
-            html += '<br/><a href="%s">Original URL</a>, Sent by mitnk.com</body></html>' % self.url
+            try:
+                netloc = urlparse(self.url).netloc
+                netloc = ".".join(netloc.split(".")[-2:])
+            except:
+                netloc = self.url
+            html += '<br/>From <a href="%s">%s</a>. Sent by mitnk.com</body></html>' % (self.url, netloc)
             f.write(html.encode('utf-8'))
         mobi_file = _generate_mobi()
         _clean_temp_files()
