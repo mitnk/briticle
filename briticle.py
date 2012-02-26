@@ -201,26 +201,30 @@ class Briticle:
         elif div_with_h1 and max_size > MAIN_CONTENT_LENGTH_LIMIT:
             return div_with_h1
 
-        def find_max_div(tag_to_search):
-            tags = tag_to_search.find_all("div")
-            if not tags:
-                if (not tag_to_search.find_all("p")) or \
-                    (len(tag_to_search.get_text()) < MIN_LIMIT):
-                    return tag_to_search.parent
-                return tag_to_search
+        # No H1 tag found, try to find main DIV with P tags
+        tags = self.soup.find_all("div")
+        if not tags:
+            return self.soup
 
-            max_count = 0
-            max_div = None
-            for tag in tags:
-                text = tag.get_text()
-                if len(text) > max_count:
-                    max_count = len(text)
-                    max_div = tag
-            if not max_div:
-                return tag_to_search
-            return find_max_div(max_div)
+        max_len = 0
+        max_div = None
+        for tag in tags:
+            # Check if there are P tag inside, if not, not a main DIV
+            has_p = False
+            for child in tag.children:
+                if hasattr(child, 'name') and child.name == "p":
+                    has_p = True
+                    break
+            if not has_p:
+                continue
             
-        return find_max_div(self.soup)
+            len_text = len(tag.get_text())
+            if len_text > max_len:
+                max_len = len_text
+                max_div = tag
+        if not max_div:
+            return self.soup
+        return max_div
 
     def _remove_meta_info(self):
         META_CLASSES = (
