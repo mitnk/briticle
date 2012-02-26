@@ -142,6 +142,8 @@ class Briticle:
     def _remove_useless_tags(self):
         for tag in self.soup.find_all("form"):
             tag.extract()
+        for tag in self.soup.find_all("font"):
+            tag.attrs = {}
 
     def _remove_comment_js_css(self):
         for c in self.soup.find_all(text=lambda t:isinstance(t, Comment)):

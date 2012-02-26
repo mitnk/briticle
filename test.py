@@ -55,6 +55,11 @@ class TestBriticle(unittest.TestCase):
         br.open(file_="./tests/mitnk.com2.html")
         self.assertEqual(br.title, u'KISS\u539f\u5219')
 
+    def testFontSize(self):
+        br = Briticle()
+        br.open(file_="./tests/div_without_attrs4.html")
+        self.assertTrue("font size=" not in br.content_html)
+
     def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
         """
         Port from Python 2.7.1
