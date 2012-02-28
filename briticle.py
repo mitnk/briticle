@@ -135,7 +135,7 @@ class Briticle:
             page = open(file_)
         else:
             opener = urllib2.build_opener()
-            opener.addheaders = [('User-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7) Gecko/20100101 Firefox/10.0.2')]
+            opener.addheaders = [('User-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2'), ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")]
             page = opener.open(self.url, timeout=timeout)
         self.soup = BeautifulSoup(page, from_encoding='utf8')
 
@@ -357,7 +357,6 @@ CONTENT_CLASSES = (
     "entry",
     "article",
     "story", # techdirt.com
-    "main",
     "text",
     "post",
 )
