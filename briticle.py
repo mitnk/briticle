@@ -335,7 +335,6 @@ class Briticle:
 MIN_LIMIT = 60
 CONTENT_CLASSES = (
     "entry-content", # wordpress
-    "highlightText", # only for kindle share
     "article-body", # thenextweb.com
     "body-copy", # techcrunch.com
     "-post",
@@ -357,7 +356,6 @@ CONTENT_CLASSES = (
     "entry",
     "article",
     "story", # techdirt.com
-    "text",
     "post",
 )
 

@@ -34,6 +34,7 @@ class TestBriticle(unittest.TestCase):
             ("tests/div_without_attrs2.html", 4447),
             ("tests/div_without_attrs3.html", 21185),
             ("tests/div_without_attrs4.html", 18748),
+            ("tests/div_without_attrs5.html", 4483),
             ("tests/remove_comments.html", 78),
             ("tests/remove_widget_and_x_post.html", 78),
         )
