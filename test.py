@@ -4,17 +4,6 @@ import re
 import unittest
 from briticle import Briticle
 
-_MAX_LENGTH = 80
-def safe_repr(obj, short=False):
-    try:
-        result = repr(obj)
-    except Exception:
-        result = object.__repr__(obj)
-    if not short or len(result) < _MAX_LENGTH:
-        return result
-    return result[:_MAX_LENGTH] + ' [truncated]...'
-
-
 OFF_SETS = 20
 IMAGE_TAG = r'\[IMG\d{3}\]'
 
@@ -48,7 +37,7 @@ class TestBriticle(unittest.TestCase):
             c = re.sub(r'\n|%s' % IMAGE_TAG, '', c)
             # Different parsers (html.parser, html5lib, lxml) have differnet 
             # methods dealing with space Not making the exactly same results
-            self.assertAlmostEqual(len(c), count, delta=10)
+            self.assertOk(len(c), count, delta=10)
             self.assertTrue(len(br.content_html) > len(br.content))
     
     def testTitle(self):
@@ -59,45 +48,15 @@ class TestBriticle(unittest.TestCase):
     def testFontSize(self):
         br = Briticle()
         br.open(file_="./tests/div_without_attrs4.html")
-        self.assertTrue("font size=" not in br.content_html)
+        self.assertTrue("font size=" not in unicode(br.content_html))
 
-    def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
-        """
-        Port from Python 2.7.1
-        Fail if the two objects are unequal as determined by their
-           difference rounded to the given number of decimal places
-           (default 7) and comparing to zero, or by comparing that the
-           between the two objects is more than the given delta.
-
-           Note that decimal places (from zero) are usually not the same
-           as significant digits (measured from the most signficant digit).
-
-           If the two objects compare equal then they will automatically
-           compare almost equal.
-        """
+    def assertOk(self, first, second, delta=None, msg=None):
         if first == second:
-            # shortcut
             return
-        if delta is not None and places is not None:
-            raise TypeError("specify delta or places not both")
-
         if delta is not None:
             if abs(first - second) <= delta:
                 return
-
-            standardMsg = '%s != %s within %s delta' % (safe_repr(first),
-                                                        safe_repr(second),
-                                                        safe_repr(delta))
-        else:
-            if places is None:
-                places = 7
-
-            if round(abs(second-first), places) == 0:
-                return
-
-            standardMsg = '%s != %s within %r places' % (safe_repr(first),
-                                                          safe_repr(second),
-                                                          places)
+        standardMsg = '%s != %s within %s delta' % (first, second, delta)
         msg = self._formatMessage(msg, standardMsg)
         raise self.failureException(msg)
 
