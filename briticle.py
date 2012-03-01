@@ -13,25 +13,38 @@ import os
 import os.path
 import re
 import subprocess
-import urllib
 import urllib2
-from urlparse import urlparse
+from urlparse import urlparse, urlsplit
 
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 
 VERBOSE = False
 
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2"
+ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+HEADERS = [('User-agent', USER_AGENT), ("Accept", ACCEPT)]
+
+def download_to_local(url, local_name):
+    """ Code from: http://stackoverflow.com/questions/862173/how-to-download-a-file-using-python-in-a-smarter-way """
+    req = urllib2.Request(url)
+    opener = urllib2.build_opener()
+    opener.addheaders = HEADERS
+    r = opener.open(req, timeout=5)
+    f = open(local_name, 'wb')
+    f.write(r.read())
+    f.close()
 
 def print_info(info):
     if VERBOSE:
         print info
 
 class Briticle:
-    def __init__(self, url=''):
+    def __init__(self, url='', sent_by="mitnk.com"):
         self.content = self.content_html = ""
         self.images = {}
         self.url = url
+        self.sent_by = sent_by
         if url:
             self.open(url)
 
@@ -135,7 +148,7 @@ class Briticle:
             page = open(file_)
         else:
             opener = urllib2.build_opener()
-            opener.addheaders = [('User-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2'), ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")]
+            opener.addheaders = HEADERS
             page = opener.open(self.url, timeout=timeout)
         self.soup = BeautifulSoup(page, from_encoding='utf8')
 
@@ -301,23 +314,26 @@ class Briticle:
                 image_ext = "png"
             image_name = "%s_%s.%s" % (file_name, img_index, image_ext)
             local_file_name = os.path.join(dir_name, image_name)
-            urllib.urlretrieve(src, local_file_name)
+            try:
+                download_to_local(src, local_file_name)
+            except urllib2.URLError:
+                continue
             self.content_html = self.content_html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
 
         html_file = os.path.join(dir_name, file_name + '.html')
         with open(html_file, 'w') as f:
-            html = '<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
+            html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
             if title:
-                html += '<title>%s</title></head><body><h1>%s</h1>' % (title, title)
+                html += u'<title>%s</title></head><body><h1>%s</h1>' % (title, title)
             else:
-                html += '<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
+                html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
             html += self.content_html
             try:
                 netloc = urlparse(self.url).netloc
-                netloc = ".".join(netloc.split(".")[-2:])
+                netloc = u".".join(netloc.split(".")[-2:])
             except:
-                netloc = "Original URL"
-            html += '<br/>From <a href="%s">%s</a>. Sent by mitnk.com</body></html>' % (self.url, netloc)
+                netloc = u"Original URL"
+            html += u'<br/>From <a href="%s">%s</a>. Sent by %s</body></html>' % (self.url, netloc, self.sent_by)
             f.write(html.encode('utf-8'))
         mobi_file = _generate_mobi()
         _clean_temp_files()
