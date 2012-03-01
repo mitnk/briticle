@@ -26,11 +26,9 @@ ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 HEADERS = [('User-agent', USER_AGENT), ("Accept", ACCEPT)]
 
 def download_to_local(url, local_name):
-    """ Code from: http://stackoverflow.com/questions/862173/how-to-download-a-file-using-python-in-a-smarter-way """
-    req = urllib2.Request(url)
     opener = urllib2.build_opener()
     opener.addheaders = HEADERS
-    r = opener.open(req, timeout=5)
+    r = opener.open(url, timeout=5)
     f = open(local_name, 'wb')
     f.write(r.read())
     f.close()
