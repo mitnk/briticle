@@ -62,7 +62,7 @@ class Briticle:
         if tag:
             self.content = self._parse_raw_text(tag.get_text())
             self.content_html = unicode(tag)
-            print_info(" *** Found it!!! ***")
+            print_info(" *** Found it with article tag !!! ***")
             return True
         return False
 
@@ -89,7 +89,7 @@ class Briticle:
             if len(content) > MIN_LIMIT:
                 self.content = content
                 self.content_html = unicode(max_tag)
-                print_info(" *** Found it!!! ***")
+                print_info(" *** Found it with DIV class !!! ***")
                 return True
         return False
         
@@ -104,17 +104,24 @@ class Briticle:
             if len(content) > MIN_LIMIT:
                 self.content = content
                 self.content_html = unicode(tag)
-                print_info(" *** Found it!!! ***")
+                print_info(" *** Found it with div ID !!! ***")
                 return True
         return False
 
     def _search_main_div(self):
         """ Try to find the main div tag with <p> inside """
-        print_info("searching main div without name ...")
+        print_info("searching main div with algorithm ...")
         tag = self._search_main_tag()
         if tag:
-            print_info(" *** Found it!!! ***")
+            # If tag contains body, assign it as body
+            if tag.body:
+                tag = tag.body
+            # If tag is not div, rename it as DIV
+            # This is for case tag.name is like <td>, which is invalid for kindlegen
+            if tag.name != "div":
+                tag.name = 'div'
             self.content_html = unicode(tag)
+            print_info(" *** Found it with algorithm !!! ***")
             self.content = self._parse_raw_text(tag.get_text())
             return True
         return False
@@ -151,8 +158,6 @@ class Briticle:
         self.soup = BeautifulSoup(page, from_encoding='utf8')
 
     def _remove_useless_tags(self):
-        for tag in self.soup.find_all("form"):
-            tag.extract()
         for tag in self.soup.find_all("font"):
             tag.attrs = {}
 
@@ -213,6 +218,22 @@ class Briticle:
             return parents_div_with_h1[0]
         elif div_with_h1 and max_size > MAIN_CONTENT_LENGTH_LIMIT:
             return div_with_h1
+
+        # Try find main content with P tags
+        # if over 70% of P share with the same one parent, return the parent
+        tags = self.soup.find_all("p")
+        if tags and len(tags) > 3:
+            parents = []
+            for p in tags:
+                if p.parent and p.parent not in parents:
+                    parents.append(p.parent)
+                else:
+                    count = getattr(p.parent, 'count', 0) or 1
+                    setattr(p.parent, 'count', count + 1)
+            for parent in parents:
+                if len(parent.get_text()) > MAIN_CONTENT_LENGTH_LIMIT and \
+                    int(getattr(parent, 'count', 0) or 1) >  len(tags) * 0.7:
+                    return parent
 
         # No H1 tag found, try to find main DIV with P tags
         tags = self.soup.find_all("div")
@@ -275,7 +296,8 @@ class Briticle:
                 tag.extract()
 
     def save_to_file(self, dir_name, title=""):
-        assert(not self.is_empty())
+        if self.is_empty():
+            return None
 
         def _clean_temp_files():
             """ Remove images using in the html file """

@@ -24,6 +24,7 @@ class TestBriticle(unittest.TestCase):
             ("tests/div_without_attrs3.html", 21185),
             ("tests/div_without_attrs4.html", 18748),
             ("tests/div_without_attrs5.html", 4483),
+            ("tests/div_without_attrs6.html", 2182),
             ("tests/remove_comments.html", 78),
             ("tests/remove_widget_and_x_post.html", 78),
         )
@@ -49,6 +50,14 @@ class TestBriticle(unittest.TestCase):
         br = Briticle()
         br.open(file_="./tests/div_without_attrs4.html")
         self.assertTrue("font size=" not in unicode(br.content_html))
+
+    def testOthersToDiv(self):
+        br = Briticle()
+        br.open(file_="./tests/div_without_attrs6.html")
+        self.assertTrue("<td>" not in br.content_html)
+        br = Briticle()
+        br.open(file_="./tests/div_without_attrs7.html")
+        self.assertTrue("<body>" not in br.content_html)
 
     def assertOk(self, first, second, delta=None, msg=None):
         if first == second:
