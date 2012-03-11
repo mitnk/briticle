@@ -3,6 +3,13 @@ Briticle
 
 Extract the main content of a webpage.
 
+Basic Usage:
+
+>>> bs = Briticle()
+>>> bs.open('http://example.com/blog-post-url/')
+>>> print bs.text # the main content
+>>> print bs.html # the main content with html tags
+
 Author:
 mitnk @ twitter
 whgking@gmail.com
@@ -20,6 +27,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment
 
 VERBOSE = False
+MIN_LIMIT = 512
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2"
 ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
@@ -56,8 +64,11 @@ class Briticle:
         txt = re.sub(r'\n+', '\n\n', txt)
         return html_parser.unescape(txt)
 
-    def _search_article_tag(self):
-        """ Using HTML5 <article> tag """
+    def _search_with_article_tag(self):
+        """ Using HTML5 <article> tag 
+
+        Only works well with html5lib or lxml
+        """
         tag = self.soup.article
         if tag:
             self.text = self._parse_raw_text(tag.get_text())
@@ -66,8 +77,12 @@ class Briticle:
             return True
         return False
 
-    def _search_div_class(self):
+    def _search_with_div_class(self):
         """ Get content with <div> class names """
+        CONTENT_CLASSES = ( "entry-content", "article-body", "body-copy",
+            "-post", "BlogText", "articleContent", "entrybody", "postBody",
+            'blogbody', "article_inner", "articleBody", "realpost",
+            "article", "story", "entry")
         for kls in CONTENT_CLASSES:
             print_info("searching div with class name: [%s] ..." % kls)
             if '-' in kls or len(kls) >= 8:
@@ -77,6 +92,7 @@ class Briticle:
             if not tags:
                 continue
 
+            # find the div with Max content
             length = 0
             max_tag = None
             for tag in tags:
@@ -93,25 +109,12 @@ class Briticle:
                 return True
         return False
         
-    def _search_div_id(self):
-        """ Search tags with <div> IDs """
-        for kls in CONTENT_IDS:
-            print_info("searching div with ID name: [%s] ..." % kls)
-            tag = self.soup.find("div", {"id": kls})
-            if not tag:
-                continue
-            content = self._parse_raw_text(tag.get_text())
-            if len(content) > MIN_LIMIT:
-                self.text = content
-                self.html = unicode(tag)
-                print_info(" *** Found it with div ID !!! ***")
-                return True
-        return False
-
-    def _search_main_div(self):
+    def _search_with_algorithm(self):
         """ Try to find the main div tag with <p> inside """
         print_info("searching main div with algorithm ...")
-        tag = self._search_main_tag()
+        tag = self._search_divs_with_h1() or \
+            self._search_p_biggest_parent() or \
+            self._search_divs_with_p()
         if tag:
             # If tag contains body, assign it as body
             if tag.body:
@@ -119,20 +122,19 @@ class Briticle:
             # If tag is not div, rename it as DIV
             # This is for case tag.name is like <td>, which is invalid for kindlegen
             if tag.name != "div":
-                tag.name = 'div'
+                tag.name = "div"
+            self.text = self._parse_raw_text(tag.get_text())
             self.html = unicode(tag)
             print_info(" *** Found it with algorithm !!! ***")
-            self.text = self._parse_raw_text(tag.get_text())
             return True
         return False
 
     def _get_content(self):
         # Stop searching if any of these methods return True
         print_info('Begin getting content...')
-        self._search_article_tag() or \
-        self._search_div_class() or \
-        self._search_div_id() or \
-        self._search_main_div()
+        self._search_with_article_tag() or \
+        self._search_with_div_class() or \
+        self._search_with_algorithm()
         self.text = self.text
         if len(self.text) < MIN_LIMIT:
             self.text = self.html = ""
@@ -197,49 +199,69 @@ class Briticle:
             tag.replace_with('\n[IMG' + name + ']\n')
             i += 1
 
-    def _search_main_tag(self):
-        ## Try to find H1 tag, whiose content should big enough (like over 1K)
-        MAIN_CONTENT_LENGTH_LIMIT = 1000
+    def _search_divs_with_h1(self):
+        """
+        Search all DIVs contain <h1>, return the biggest one.
+        - If there are more such <DIV>s, and share one parent, return this parent.
+        - Else, return the biggest <DIV>
+
+        Return a Tag or None
+        """
+        print_info("searching div with h1 inside ...")
         div_with_h1 = None
         count_div_with_h1 = 0
         max_size = 0
-        parents_div_with_h1 = []
+        parents = []
         for tag in self.soup.find_all("div"):
             for child in tag.children:
                 if hasattr(child, 'name') and child.name == "h1":
                     count_div_with_h1 += 1
-                    if tag.parent not in parents_div_with_h1:
-                        parents_div_with_h1.append(tag.parent)
+                    if tag.parent not in parents:
+                        parents.append(tag.parent)
                     size = len(tag.get_text())
-                    if size > max_size:
+                    if size > MIN_LIMIT and size > max_size:
                         max_size = size
                         div_with_h1 = tag
                     break
-        if count_div_with_h1 > 1 and len(parents_div_with_h1) == 1:
-            return parents_div_with_h1[0]
-        elif div_with_h1 and max_size > MAIN_CONTENT_LENGTH_LIMIT:
+        if count_div_with_h1 > 1 and len(parents) == 1:
+            return parents[0]
+        elif div_with_h1:
             return div_with_h1
 
-        # Try find main content with P tags
-        # if over 70% of P share with the same one parent, return the parent
+    def _search_p_biggest_parent(self):
+        """
+        Try to find main content with P tags
+        if over 70% of P share with the same one parent, return the parent
+        """
+        print_info("searching P biggest parent ...")
+
+        P_COUNT_LIMIT = 3
+        PERCENT_LIMIT = 0.70
         tags = self.soup.find_all("p")
-        if tags and len(tags) > 3:
+        if tags and len(tags) > P_COUNT_LIMIT:
             parents = []
             for p in tags:
-                if p.parent and p.parent not in parents:
+                if not p.parents:
+                    continue
+                if p.parent not in parents:
                     parents.append(p.parent)
                 else:
                     count = getattr(p.parent, 'count', 0) or 1
                     setattr(p.parent, 'count', count + 1)
-            for parent in parents:
-                if len(parent.get_text()) > MAIN_CONTENT_LENGTH_LIMIT and \
-                    int(getattr(parent, 'count', 0) or 1) >  len(tags) * 0.7:
-                    return parent
+            for tag in parents:
+                if len(tag.get_text()) > MIN_LIMIT and \
+                    int(getattr(tag, 'count', 0) or 1) >  len(tags) * PERCENT_LIMIT:
+                    return tag
 
-        # No H1 tag found, try to find main DIV with P tags
+    def _search_divs_with_p(self):
+        """
+        Try to find the biggest DIV with p inside.
+        """
+        print_info("searching biggest div with p inside ...")
+
         tags = self.soup.find_all("div")
         if not tags:
-            return self.soup
+            return None
 
         max_len = 0
         max_div = None
@@ -253,12 +275,10 @@ class Briticle:
             if not has_p:
                 continue
             
-            len_text = len(tag.get_text())
-            if len_text > max_len:
-                max_len = len_text
+            length = len(tag.get_text())
+            if length > MIN_LIMIT and length > max_len:
+                max_len = length
                 max_div = tag
-        if not max_div:
-            return self.soup
         return max_div
 
     def _remove_meta_info(self):
@@ -349,32 +369,3 @@ class Briticle:
         return mobi_file
 
 
-MIN_LIMIT = 60
-CONTENT_CLASSES = (
-    "entry-content",
-    "article-body",
-    "body-copy",
-    "-post",
-    "BlogText",
-    "articleContent",
-    "entrybody",
-    "postBody",
-    "article_inner",
-    "articleBody",
-    "blogbody",
-    "realpost",
-    "entry",
-    "article",
-    "story",
-    "post",
-)
-
-CONTENT_IDS = (
-    "readme",
-    "story",
-    "-content", # need before 'post'
-    "entry-",
-    "post-",
-    "post",
-    "entry",
-)
