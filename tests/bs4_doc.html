@@ -1,0 +1,200 @@
+<html>
+<body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li style="margin-right: 10px" class="right">
+          <a accesskey="I" title="General Index" href="genindex.html">index</a></li>
+        <li><a href="#">Beautiful Soup v4.0.0 documentation</a> »</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+<div id="beautiful-soup-documentation" class="section">
+<h1>Beautiful Soup Documentation<a title="Permalink to this headline" href="#beautiful-soup-documentation" class="headerlink">¶</a></h1>
+<img src="_images/6.1.jpg" class="align-right" alt="&quot;The Fish-Footman began by producing from under his arm a great letter, nearly as large as himself.&quot;">
+<p><a href="http://www.crummy.com/software/BeautifulSoup/" class="reference external">Beautiful Soup</a> is a
+Python library for pulling data out of HTML and XML files. It works
+with your favorite parser to provide idiomatic ways of navigating,
+searching, and modifying the parse tree. It commonly saves programmers
+hours or days of work.</p>
+<p>These instructions illustrate all major features of Beautiful Soup 4,
+with examples. I show you what the library is good for, how it works,
+how to use it, how to make it do what you want, and what to do when it
+violates your expectations.</p>
+<p>The examples in this documentation should work the same way in Python
+2.7 and Python 3.2.</p>
+<p>You might be looking for the documentation for <a href="http://www.crummy.com/software/BeautifulSoup/bs3/documentation.html" class="reference external">Beautiful Soup 3</a>. If
+you want to learn about the differences between Beautiful Soup 3 and
+Beautiful Soup 4, see <a href="#porting-code-to-bs4" class="reference external">Porting code to BS4</a>.</p>
+<div id="getting-help" class="section">
+<h2>Getting help<a title="Permalink to this headline" href="#getting-help" class="headerlink">¶</a></h2>
+<p>If you have questions about Beautiful Soup, or run into problems,
+<a href="http://groups.google.com/group/beautifulsoup/" class="reference external">send mail to the discussion group</a>.</p>
+</div>
+</div>
+<div id="quick-start" class="section">
+<h1>Quick Start<a title="Permalink to this headline" href="#quick-start" class="headerlink">¶</a></h1>
+<p>Here’s an HTML document I’ll be using as an example throughout this
+document. It’s part of a story from <cite>Alice in Wonderland</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">html_doc</span> <span class="o">=</span> <span class="s">"""</span>
+<span class="s">&lt;html&gt;&lt;head&gt;&lt;title&gt;The Dormouse's story&lt;/title&gt;&lt;/head&gt;</span>
+
+<span class="s">&lt;p class="title"&gt;&lt;b&gt;The Dormouse's story&lt;/b&gt;&lt;/p&gt;</span>
+
+<span class="s">&lt;p class="story"&gt;Once upon a time there were three little sisters; and their names were</span>
+<span class="s">&lt;a href="http://example.com/elsie" class="sister" id="link1"&gt;Elsie&lt;/a&gt;,</span>
+<span class="s">&lt;a href="http://example.com/lacie" class="sister" id="link2"&gt;Lacie&lt;/a&gt; and</span>
+<span class="s">&lt;a href="http://example.com/tillie" class="sister" id="link3"&gt;Tillie&lt;/a&gt;;</span>
+<span class="s">and they lived at the bottom of a well.&lt;/p&gt;</span>
+
+<span class="s">&lt;p class="story"&gt;...&lt;/p&gt;</span>
+<span class="s">"""</span>
+</pre></div>
+</div>
+<p>Running the “three sisters” document through Beautiful Soup gives us a
+<tt class="docutils literal"><span class="pre">BeautifulSoup</span></tt> object, which represents the document as a nested
+data structure:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+<span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html_doc</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">prettify</span><span class="p">())</span>
+<span class="c"># &lt;html&gt;</span>
+<span class="c">#  &lt;head&gt;</span>
+<span class="c">#   &lt;title&gt;</span>
+<span class="c">#    The Dormouse's story</span>
+<span class="c">#   &lt;/title&gt;</span>
+<span class="c">#  &lt;/head&gt;</span>
+<span class="c">#  &lt;body&gt;</span>
+<span class="c">#   &lt;p class="title"&gt;</span>
+<span class="c">#    &lt;b&gt;</span>
+<span class="c">#     The Dormouse's story</span>
+<span class="c">#    &lt;/b&gt;</span>
+<span class="c">#   &lt;/p&gt;</span>
+<span class="c">#   &lt;p class="story"&gt;</span>
+<span class="c">#    Once upon a time there were three little sisters; and their names were</span>
+<span class="c">#    &lt;a class="sister" href="http://example.com/elsie" id="link1"&gt;</span>
+<span class="c">#     Elsie</span>
+<span class="c">#    &lt;/a&gt;</span>
+<span class="c">#    ,</span>
+<span class="c">#    &lt;a class="sister" href="http://example.com/lacie" id="link2"&gt;</span>
+<span class="c">#     Lacie</span>
+<span class="c">#    &lt;/a&gt;</span>
+<span class="c">#    and</span>
+<span class="c">#    &lt;a class="sister" href="http://example.com/tillie" id="link2"&gt;</span>
+<span class="c">#     Tillie</span>
+<span class="c">#    &lt;/a&gt;</span>
+<span class="c">#    ; and they lived at the bottom of a well.</span>
+<span class="c">#   &lt;/p&gt;</span>
+<span class="c">#   &lt;p class="story"&gt;</span>
+<span class="c">#    ...</span>
+<span class="c">#   &lt;/p&gt;</span>
+<span class="c">#  &lt;/body&gt;</span>
+<span class="c"># &lt;/html&gt;</span>
+</pre></div>
+</div>
+<p>Here are some simple ways to navigate that data structure:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">soup</span><span class="o">.</span><span class="n">title</span>
+<span class="c"># &lt;title&gt;The Dormouse's story&lt;/title&gt;</span>
+
+<span class="n">soup</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">name</span>
+<span class="c"># u'title'</span>
+
+<span class="n">soup</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">string</span>
+<span class="c"># u'The Dormouse's story'</span>
+
+<span class="n">soup</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span>
+<span class="c"># u'head'</span>
+
+<span class="n">soup</span><span class="o">.</span><span class="n">p</span>
+<span class="c"># &lt;p class="title"&gt;&lt;b&gt;The Dormouse's story&lt;/b&gt;&lt;/p&gt;</span>
+
+<span class="n">soup</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="s">'class'</span><span class="p">]</span>
+<span class="c"># u'title'</span>
+
+<span class="n">soup</span><span class="o">.</span><span class="n">a</span>
+<span class="c"># &lt;a class="sister" href="http://example.com/elsie" id="link1"&gt;Elsie&lt;/a&gt;</span>
+
+<span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s">'a'</span><span class="p">)</span>
+<span class="c"># [&lt;a class="sister" href="http://example.com/elsie" id="link1"&gt;Elsie&lt;/a&gt;,</span>
+<span class="c">#  &lt;a class="sister" href="http://example.com/lacie" id="link2"&gt;Lacie&lt;/a&gt;,</span>
+<span class="c">#  &lt;a class="sister" href="http://example.com/tillie" id="link3"&gt;Tillie&lt;/a&gt;]</span>
+
+<span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s">"link3"</span><span class="p">)</span>
+<span class="c"># &lt;a class="sister" href="http://example.com/tillie" id="link3"&gt;Tillie&lt;/a&gt;</span>
+</pre></div>
+</div>
+<p>One common task is extracting all the URLs found within a page’s &lt;a&gt; tags:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s">'a'</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'href'</span><span class="p">))</span>
+<span class="c"># http://example.com/elsie</span>
+<span class="c"># http://example.com/lacie</span>
+<span class="c"># http://example.com/tillie</span>
+</pre></div>
+</div>
+<p>Another common task is extracting all the text from a page:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span><span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">get_text</span><span class="p">())</span>
+<span class="c"># The Dormouse's story</span>
+<span class="c">#</span>
+<span class="c"># The Dormouse's story</span>
+<span class="c">#</span>
+<span class="c"># Once upon a time there were three little sisters; and their names were</span>
+<span class="c"># Elsie,</span>
+<span class="c"># Lacie and</span>
+<span class="c"># Tillie;</span>
+<span class="c"># and they lived at the bottom of a well.</span>
+<span class="c">#</span>
+<span class="c"># ...</span>
+</pre></div>
+</div>
+<p>Does this look like what you need? If so, read on.</p>
+</div>
+<div id="installing-beautiful-soup" class="section">
+<h1>Installing Beautiful Soup<a title="Permalink to this headline" href="#installing-beautiful-soup" class="headerlink">¶</a></h1>
+<p>Beautiful Soup 4 is published through PyPi, so you can install it with
+<tt class="docutils literal"><span class="pre">easy_install</span></tt> or <tt class="docutils literal"><span class="pre">pip</span></tt>. The package name is <tt class="docutils literal"><span class="pre">beautifulsoup4</span></tt>,
+and the same package works on Python 2 and Python 3.</p>
+<p><tt class="kbd docutils literal"><span class="pre">$</span> <span class="pre">easy_install</span> <span class="pre">beautifulsoup4</span></tt></p>
+<p><tt class="kbd docutils literal"><span class="pre">$</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">beautifulsoup4</span></tt></p>
+<p>(The <tt class="docutils literal"><span class="pre">BeautifulSoup</span></tt> package is probably <cite>not</cite> what you want. That’s
+the previous major release, <a href="http://www.crummy.com/software/BeautifulSoup/bs3/documentation.html" class="reference external">Beautiful Soup 3</a>. Lots of software uses
+BS3, so it’s still available, but if you’re writing new code you
+should install <tt class="docutils literal"><span class="pre">beautifulsoup4</span></tt>.)</p>
+<p>You can also <a href="http://www.crummy.com/software/BeautifulSoup/download/4.x/" class="reference external">download the Beautiful Soup 4 source tarball</a> and
+install it with <tt class="docutils literal"><span class="pre">setup.py</span></tt>. The license for Beautiful Soup allows
+you to package the entire library with your application, allowing you
+to copy the <tt class="docutils literal"><span class="pre">bs4</span></tt> directory into your application’s codebase.</p>
+<p>I use Python 2.7 and Python 3.2 to develop Beautiful Soup, but it
+should work with other recent versions.</p>
+<div id="be-sure-to-install-a-good-parser" class="section">
+<span id="parser-installation"></span><h2>Be sure to install a good parser!<a title="Permalink to this headline" href="#be-sure-to-install-a-good-parser" class="headerlink">¶</a></h2>
+<p>Beautiful Soup uses a plugin system that supports a number of popular
+Python parsers. If no third-party parsers are installed, Beautiful
+Soup uses the HTML parser that comes with Python. In recent releases
+of Python (2.7.3 and 3.2.2), this parser is excellent at handling bad
+HTML. Unfortunately, in older releases, it’s not very good at all.</p>
+<p>Even if you’re using a recent release of Python, I recommend you
+install the <a href="http://lxml.de/" class="reference external">lxml parser</a> if you can. Its
+reliability is good on both HTML and XML, and it’s much faster than
+Python’s built-in parser. Beautiful Soup will detect that you have
+lxml installed, and use it instead of Python’s built-in parser.</p>
+<p>Depending on your setup, you might install lxml with one of these commands:</p>
+<p><tt class="kbd docutils literal"><span class="pre">$</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python-lxml</span></tt></p>
+<p><tt class="kbd docutils literal"><span class="pre">$</span> <span class="pre">easy_install</span> <span class="pre">lxml</span></tt></p>
+<p><tt class="kbd docutils literal"><span class="pre">$</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lxml</span></tt></p>
+<p>If you’re using Python 2, another alternative is the pure-Python
+<a href="http://code.google.com/p/html5lib/" class="reference external">html5lib parser</a>, which parses
+HTML the way a web browser does. Depending on your setup, you might
+install html5lib with one of these commands:</p>
+<p><tt class="kbd docutils literal"><span class="pre">$</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python-html5lib</span></tt></p>
+<p><tt class="kbd docutils literal"><span class="pre">$</span> <span class="pre">easy_install</span> <span class="pre">html5lib</span></tt></p>
+<p><tt class="kbd docutils literal"><span class="pre">$</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">html5lib</span></tt></p>
+</div>
+</div>
+
+</body>
+</html>

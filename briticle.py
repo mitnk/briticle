@@ -1,7 +1,7 @@
 """
 Briticle
 
-Fetch Blog Articles via URLs
+Extract the main content of a webpage.
 
 Author:
 mitnk @ twitter
@@ -38,16 +38,16 @@ def print_info(info):
         print info
 
 class Briticle:
-    def __init__(self, url='', sent_by="mitnk.com"):
-        self.content = self.content_html = ""
-        self.images = {}
+    def __init__(self, url=''):
         self.url = url
-        self.sent_by = sent_by
+        self.title = ""
+        self.text = self.html = ""
+        self._images = {}
         if url:
             self.open(url)
 
     def is_empty(self):
-        return len(self.content) < MIN_LIMIT or len(self.content_html) < MIN_LIMIT
+        return len(self.text) < MIN_LIMIT or len(self.html) < MIN_LIMIT
 
     def _parse_raw_text(self, txt):
         html_parser = HTMLParser.HTMLParser()
@@ -60,8 +60,8 @@ class Briticle:
         """ Using HTML5 <article> tag """
         tag = self.soup.article
         if tag:
-            self.content = self._parse_raw_text(tag.get_text())
-            self.content_html = unicode(tag)
+            self.text = self._parse_raw_text(tag.get_text())
+            self.html = unicode(tag)
             print_info(" *** Found it with article tag !!! ***")
             return True
         return False
@@ -87,8 +87,8 @@ class Briticle:
 
             content = self._parse_raw_text(max_tag.get_text())
             if len(content) > MIN_LIMIT:
-                self.content = content
-                self.content_html = unicode(max_tag)
+                self.text = content
+                self.html = unicode(max_tag)
                 print_info(" *** Found it with DIV class !!! ***")
                 return True
         return False
@@ -102,8 +102,8 @@ class Briticle:
                 continue
             content = self._parse_raw_text(tag.get_text())
             if len(content) > MIN_LIMIT:
-                self.content = content
-                self.content_html = unicode(tag)
+                self.text = content
+                self.html = unicode(tag)
                 print_info(" *** Found it with div ID !!! ***")
                 return True
         return False
@@ -120,9 +120,9 @@ class Briticle:
             # This is for case tag.name is like <td>, which is invalid for kindlegen
             if tag.name != "div":
                 tag.name = 'div'
-            self.content_html = unicode(tag)
+            self.html = unicode(tag)
             print_info(" *** Found it with algorithm !!! ***")
-            self.content = self._parse_raw_text(tag.get_text())
+            self.text = self._parse_raw_text(tag.get_text())
             return True
         return False
 
@@ -133,8 +133,9 @@ class Briticle:
         self._search_div_class() or \
         self._search_div_id() or \
         self._search_main_div()
-        if len(self.content) < MIN_LIMIT:
-            self.content = self.content_html = ""
+        self.text = self.text
+        if len(self.text) < MIN_LIMIT:
+            self.text = self.html = ""
 
     def open(self, url="", file_=""):
         if url:
@@ -192,7 +193,7 @@ class Briticle:
             name, src = "%03d" % i, tag['src']
             if not src.startswith('http') and self.url:
                 src = 'http://' + urlparse(self.url).netloc + "/" + src
-            self.images[name] = src
+            self._images[name] = src
             tag.replace_with('\n[IMG' + name + ']\n')
             i += 1
 
@@ -261,41 +262,18 @@ class Briticle:
         return max_div
 
     def _remove_meta_info(self):
-        META_CLASSES = (
-            "post-bottom-area",
-            "wp-caption", # wordpress images
-            "entryDescription", # wired.com
-            "toolsListContainer",
-            "BlogEntryInfo",
-            "post-meta",
-            "entry-meta",
-            "entry-related",
-            "addthis_toolbox",
-            "widget-area",
-            "sharing-",
-            "related",
-            "post_header",
-            "comment",
-            "comments",
-            "widget-",
-            "links",
-        )
+        """
+        Remove all tags whose id or class attr with the following chars
+        """
+        p_meta = re.compile(r'post-bottom-area|entryDescription|'
+            r'toolsListContainer|BlogEntryInfo|related|meta|sharing-|'
+            r'addthis_toolbox|post_header|comment|widget-|links')
+        for tag in self.soup.find_all(attrs=p_meta):
+            tag.extract()
+        for tag in self.soup.find_all(attrs={'id': p_meta}):
+            tag.extract()
 
-        META_IDS = (
-            "commentArea",
-            "commentText",
-            "comment",
-            "comments",
-        )
-
-        for kls in META_CLASSES:
-            for tag in self.soup.find_all(attrs=re.compile(kls)):
-                tag.extract()
-        for kls in META_IDS:
-            for tag in self.soup.find_all("div", {"id": kls}):
-                tag.extract()
-
-    def save_to_file(self, dir_name, title=""):
+    def save_to_file(self, dir_name, title="", sent_by=None):
         if self.is_empty():
             return None
 
@@ -325,9 +303,9 @@ class Briticle:
         if not file_name:
             file_name = "Untitled_Documentation"
 
-        images = re.findall(r'\[IMG(\d{3})\]', self.content_html)
+        images = re.findall(r'\[IMG(\d{3})\]', self.html)
         for img_index in images:
-            src = self.images[img_index]
+            src = self._images[img_index]
             image_ext = src.split(".")[-1]
             if len(image_ext) != 3:
                 # Guess a ext when there isn't
@@ -338,7 +316,7 @@ class Briticle:
                 download_to_local(src, local_file_name)
             except urllib2.URLError:
                 continue
-            self.content_html = self.content_html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
+            self.html = self.html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
 
         html_file = os.path.join(dir_name, file_name + '.html')
         with open(html_file, 'w') as f:
@@ -347,13 +325,16 @@ class Briticle:
                 html += u'<title>%s</title></head><body><h1>%s</h1>' % (title, title)
             else:
                 html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
-            html += self.content_html
+            html += self.html
             try:
                 netloc = urlparse(self.url).netloc
                 netloc = u".".join(netloc.split(".")[-2:])
             except:
                 netloc = u"Original URL"
-            html += u'<br/>From <a href="%s">%s</a>. Sent by %s</body></html>' % (self.url, netloc, self.sent_by)
+            html += u'<br/>From <a href="%s">%s</a>. ' % (self.url, netloc)
+            if sent_by:
+                html += u'Sent by %s' % sent_by
+            html += u'</body></html>'
             f.write(html.encode('utf-8'))
         mobi_file = _generate_mobi()
         _clean_temp_files()
@@ -362,7 +343,7 @@ class Briticle:
         if not mobi_file:
             txt_file = os.path.join(dir_name, file_name + '.txt')
             with open(txt_file, 'w') as f:
-                f.write(self.content.encode('utf-8'))
+                f.write(self.text.encode('utf-8'))
                 f.write(u"\n\n" + unicode(self.url))
             return txt_file
         return mobi_file
@@ -370,28 +351,21 @@ class Briticle:
 
 MIN_LIMIT = 60
 CONTENT_CLASSES = (
-    "entry-content", # wordpress
-    "article-body", # thenextweb.com
-    "body-copy", # techcrunch.com
+    "entry-content",
+    "article-body",
+    "body-copy",
     "-post",
     "BlogText",
     "articleContent",
-    "entry-body",
     "entrybody",
-    "postBody", # http://news.cnet.com
-    "post-body", # blogspot
-    "blog-body", # economist.com/blogs
+    "postBody",
     "article_inner",
     "articleBody",
-    "articlePage", # for wsj.com
-    "storycontent",
-    "storyText",
     "blogbody",
     "realpost",
-    "asset-body",
     "entry",
     "article",
-    "story", # techdirt.com
+    "story",
     "post",
 )
 

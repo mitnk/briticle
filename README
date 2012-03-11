@@ -1,17 +1,22 @@
-Fetch blog articles via URLs.
+Extract the Main Content of a webpage.
 
 Requirements:
 
 - BeautifulSoup 4
 - html5lib / lxml (*)
 
-NOTE:
+Basic Usage:
 
-This libiray does NOT suppose to be working perfectly, which is not possible. Everyone may difine divs in pages in every strange ways. You may take a look at Readability if you interested: http://www.readability.com/publishers/api/
+    >>> bs = Briticle()
+    >>> bs.open('http://example.com/blog-post-url/')
+    >>> print bs.text # the main content
+    >>> print bs.html # the main content with html tags
 
 * Required by BeautifulSoup 4 to parser some pages. If not, HTMLParseError may occur.
 * You can choose either of them, both can pass the unit tests (Run it to make sure it is).
 * I am using lxml, it's faster.
+
+Author:
 
 - mitnk
 - whgking@gmail.com
