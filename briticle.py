@@ -11,7 +11,7 @@ Basic Usage:
 >>> print bs.html # the main content with html tags
 
 Author:
-mitnk @ twitter 
+mitnk @ twitter
 whgking@gmail.com
 """
 
@@ -28,6 +28,8 @@ from bs4.element import Comment
 
 
 __all__ = ['Briticle']
+
+VERSION = (1, 0, 0, 'rc', 1)
 
 VERBOSE = False
 MIN_LIMIT = 512
