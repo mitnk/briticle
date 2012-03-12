@@ -26,6 +26,9 @@ from urlparse import urlparse, urlsplit
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 
+
+__all__ = ['Briticle']
+
 VERBOSE = False
 MIN_LIMIT = 512
 
