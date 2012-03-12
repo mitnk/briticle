@@ -36,5 +36,5 @@ contains briticle.py:
 Author
 ------
 
-mitnk @ twitter
+mitnk @ twitter  
 whgking AT gmail DOT com
