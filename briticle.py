@@ -11,7 +11,7 @@ Basic Usage:
 >>> print bs.html # the main content with html tags
 
 Author:
-mitnk @ twitter
+mitnk @ twitter 
 whgking@gmail.com
 """
 
