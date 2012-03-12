@@ -145,11 +145,33 @@ class Briticle:
         self._get_soup(url, file_)
         self._remove_comment_js_css()
         self._remove_useless_tags()
+        self._deal_with_special_sites()
         self._get_title()
         self._deal_with_line_breaks()
         self._deal_with_images()
         self._remove_meta_info()
         self._get_content()
+
+    def _deal_with_special_sites(self):
+        if 'wikipedia.org' in self.url:
+            for tag in self.soup.find_all('a'):
+                if 'href' in tag.attrs and tag['href'].endswith('.svg') and tag.img:
+                    tag.replace_with(tag.img)
+            for tag in self.soup.find_all('img'):
+                if 'src' in tag.attrs and tag['src'].endswith('magnify-clip.png'):
+                    tag.extract()
+
+            tags = self.soup.findAll('h2')
+            for tag in self.soup.findAll('h2'):
+                if 'See also' in tag.get_text():
+                    for sibling in tag.find_next_siblings(True):
+                        sibling.extract()
+                    tag.extract()
+            p_meta = re.compile(r'infobox|toc|siteSub|metadata|editsection|jump-to-nav|printfooter')
+            for tag in self.soup.find_all(attrs=p_meta):
+                tag.extract()
+            for tag in self.soup.find_all(attrs={'id': p_meta}):
+                tag.extract()
 
     def _get_soup(self, url='', file_='', timeout=5):
         if file_:
@@ -188,12 +210,17 @@ class Briticle:
             tag.insert(0, "\n")
 
     def _deal_with_images(self):
+        if not self.url:
+            return
+
         i = 1
         for tag in self.soup.find_all('img'):
             if 'src' not in tag.attrs:
                 continue
             name, src = "%03d" % i, tag['src']
-            if not src.startswith('http') and self.url:
+            if src.startswith('//'):
+                src = urlparse(self.url).scheme + ":" + src
+            elif not src.startswith('http'):
                 src = 'http://' + urlparse(self.url).netloc + "/" + src
             self._images[name] = src
             tag.replace_with('\n[IMG' + name + ']\n')

@@ -20,6 +20,8 @@ class TestBriticle(unittest.TestCase):
         file_list = (
             ("tests/github_project.html", 1273),
             ("tests/bs4_doc.html", 5555),
+            ("tests/wikipedia1.html", 29911),
+            ("tests/wikipedia2.html", 1865),
         )
 
         for f, count in file_list:
