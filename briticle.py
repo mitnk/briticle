@@ -16,12 +16,13 @@ whgking@gmail.com
 """
 
 import HTMLParser
+import logging
 import os
 import os.path
 import re
 import subprocess
 import urllib2
-from urlparse import urlparse, urlsplit
+from urlparse import urlparse
 
 from bs4 import BeautifulSoup
 from bs4.element import Comment
@@ -34,7 +35,8 @@ VERSION = (1, 0, 0, 'rc', 1)
 VERBOSE = False
 MIN_LIMIT = 512
 
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2"
+USER_AGENT = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2)"
+    " Gecko/20100101 Firefox/10.0.2")
 ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 HEADERS = [('User-agent', USER_AGENT), ("Accept", ACCEPT)]
 
@@ -45,10 +47,6 @@ def download_to_local(url, local_name):
     f = open(local_name, 'wb')
     f.write(r.read())
     f.close()
-
-def print_info(info):
-    if VERBOSE:
-        print info
 
 class Briticle:
     def __init__(self, url=''):
@@ -78,7 +76,7 @@ class Briticle:
         if tag:
             self.text = self._parse_raw_text(tag.get_text())
             self.html = unicode(tag)
-            print_info(" *** Found it with article tag !!! ***")
+            logging.debug(" *** Found it with article tag !!! ***")
             return True
         return False
 
@@ -89,7 +87,7 @@ class Briticle:
             'blogbody', "article_inner", "articleBody", "realpost",
             "article", "story", "entry")
         for kls in CONTENT_CLASSES:
-            print_info("searching div with class name: [%s] ..." % kls)
+            logging.debug("searching div with class name: [%s] ..." % kls)
             if '-' in kls or len(kls) >= 8:
                 tags = self.soup.find_all("div", {"class": re.compile(kls)})
             else:
@@ -110,13 +108,13 @@ class Briticle:
             if len(content) > MIN_LIMIT:
                 self.text = content
                 self.html = unicode(max_tag)
-                print_info(" *** Found it with DIV class !!! ***")
+                logging.debug(" *** Found it with DIV class !!! ***")
                 return True
         return False
         
     def _search_with_algorithm(self):
         """ Try to find the main div tag with <p> inside """
-        print_info("searching main div with algorithm ...")
+        logging.debug("searching main div with algorithm ...")
         tag = self._search_divs_with_h1() or \
             self._search_p_biggest_parent() or \
             self._search_divs_with_p()
@@ -130,13 +128,13 @@ class Briticle:
                 tag.name = "div"
             self.text = self._parse_raw_text(tag.get_text())
             self.html = unicode(tag)
-            print_info(" *** Found it with algorithm !!! ***")
+            logging.debug(" *** Found it with algorithm !!! ***")
             return True
         return False
 
     def _get_content(self):
         # Stop searching if any of these methods return True
-        print_info('Begin getting content...')
+        logging.debug('Begin getting content...')
         self._search_with_article_tag() or \
         self._search_with_div_class() or \
         self._search_with_algorithm()
@@ -158,6 +156,9 @@ class Briticle:
         self._get_content()
 
     def _deal_with_special_sites(self):
+        if 'posterous.com' in self.url:
+            self.meta_classes_to_be_remove += ['editbox']
+
         if 'wiki' in self.url:
             for tag in self.soup.find_all('a'):
                 if 'href' in tag.attrs and tag['href'].endswith('.svg') and tag.img:
@@ -166,7 +167,6 @@ class Briticle:
                 if 'src' in tag.attrs and tag['src'].endswith('magnify-clip.png'):
                     tag.extract()
 
-            tags = self.soup.findAll('h2')
             for tag in self.soup.findAll('h2'):
                 if 'See also' in tag.get_text():
                     for sibling in tag.find_next_siblings(True):
@@ -239,7 +239,7 @@ class Briticle:
 
         Return a Tag or None
         """
-        print_info("searching div with h1 inside ...")
+        logging.debug("searching div with h1 inside ...")
         div_with_h1 = None
         count_div_with_h1 = 0
         max_size = 0
@@ -265,7 +265,7 @@ class Briticle:
         Try to find main content with P tags
         if over 70% of P share with the same one parent, return the parent
         """
-        print_info("searching P biggest parent ...")
+        logging.debug("searching P biggest parent ...")
 
         P_COUNT_LIMIT = 3
         PERCENT_LIMIT = 0.70
@@ -289,7 +289,7 @@ class Briticle:
         """
         Try to find the biggest DIV with p inside.
         """
-        print_info("searching biggest div with p inside ...")
+        logging.debug("searching biggest div with p inside ...")
 
         tags = self.soup.find_all("div")
         if not tags:
