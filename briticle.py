@@ -43,7 +43,7 @@ HEADERS = [('User-agent', USER_AGENT), ("Accept", ACCEPT)]
 def download_to_local(url, local_name):
     opener = urllib2.build_opener()
     opener.addheaders = HEADERS
-    r = opener.open(url, timeout=5)
+    r = opener.open(url, timeout=9)
     f = open(local_name, 'wb')
     f.write(r.read())
     f.close()
@@ -218,18 +218,15 @@ class Briticle:
         if not self.url:
             return
 
-        i = 1
         for tag in self.soup.find_all('img'):
             if 'src' not in tag.attrs:
                 continue
-            name, src = "%03d" % i, tag['src']
+            src = tag['src']
             if src.startswith('//'):
                 src = urlparse(self.url).scheme + ":" + src
             elif not src.startswith('http'):
                 src = 'http://' + urlparse(self.url).netloc + "/" + src
-            self._images[name] = src
-            tag.replace_with('\n[IMG' + name + ']\n')
-            i += 1
+            tag['src'] = src
 
     def _search_divs_with_h1(self):
         """
@@ -355,20 +352,28 @@ class Briticle:
         if not file_name:
             file_name = "Untitled_Documentation"
 
-        images = re.findall(r'\[IMG(\d{3})\]', self.html)
-        for img_index in images:
-            src = self._images[img_index]
+        # Save images to local and change the <img> src to new location
+        i = 1
+        soup = BeautifulSoup(self.html, 'html.parser')
+        images = soup.findAll('img')
+        for img in images:
+            if 'src' not in img.attrs:
+                continue
+            src = img['src']
             image_ext = src.split(".")[-1]
             if len(image_ext) != 3:
-                # Guess a ext when there isn't
+                # Guess a ext when does not exist
                 image_ext = "png"
-            image_name = "%s_%s.%s" % (file_name, img_index, image_ext)
+            image_name = "%s_%s.%s" % (file_name, i, image_ext)
             local_file_name = os.path.join(dir_name, image_name)
             try:
                 download_to_local(src, local_file_name)
             except urllib2.URLError:
                 continue
-            self.html = self.html.replace('[IMG%s]' % img_index, '<img src="%s">' % image_name)
+            new_tag = soup.new_tag("img", src=image_name)
+            img.replace_with(new_tag)
+            i += 1
+        self.html = unicode(soup)
 
         html_file = os.path.join(dir_name, file_name + '.html')
         with open(html_file, 'w') as f:
