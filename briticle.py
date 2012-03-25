@@ -53,7 +53,6 @@ class Briticle:
         self.url = url
         self.title = ""
         self.text = self.html = ""
-        self._images = {}
         if url:
             self.open(url)
 
