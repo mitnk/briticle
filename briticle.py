@@ -155,9 +155,6 @@ class Briticle:
         self._get_content()
 
     def _deal_with_special_sites(self):
-        if 'posterous.com' in self.url:
-            self.meta_classes_to_be_remove += ['editbox']
-
         if 'wiki' in self.url:
             for tag in self.soup.find_all('a'):
                 if 'href' in tag.attrs and tag['href'].endswith('.svg') and tag.img:
