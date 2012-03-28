@@ -369,7 +369,6 @@ class Briticle:
             new_tag = soup.new_tag("img", src=image_name)
             img.replace_with(new_tag)
             i += 1
-        self.html = unicode(soup)
 
         html_file = os.path.join(dir_name, file_name + '.html')
         with open(html_file, 'w') as f:
@@ -378,7 +377,7 @@ class Briticle:
                 html += u'<title>%s</title></head><body><h1>%s</h1>' % (title, title)
             else:
                 html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
-            html += self.html
+            html += unicode(soup)
             try:
                 netloc = urlparse(self.url).netloc
                 netloc = u".".join(netloc.split(".")[-2:])
