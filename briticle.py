@@ -363,8 +363,6 @@ class BriticleFile(Briticle):
         self.save_dir = save_dir
         if not os.path.exists(save_dir):
             os.mkdir(save_dir)
-        if not os.path.isdir(save_dir):
-            raise OSError("Save directory does not exist.")
         self.url = url
         if url:
             self.open(url)
@@ -375,6 +373,9 @@ class BriticleFile(Briticle):
         return ""
 
     def save_to_mobi(self, title="", file_name=""):
+        if self.is_empty():
+            return None
+
         html_file = os.path.join(self.save_dir, self._get_file_name_from_title() + '.html')
         if os.path.exists(html_file):
             self.html_file = html_file
@@ -382,7 +383,7 @@ class BriticleFile(Briticle):
             self.save_to_html(title, file_name)
 
         if not self.html_file or not os.path.exists(self.html_file):
-            return OSError("html version file does not exist while generating mobi")
+            raise OSError("html version file does not exist while generating mobi")
 
         html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
         html += u'</head><body>'
