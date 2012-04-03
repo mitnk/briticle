@@ -372,7 +372,7 @@ class BriticleFile(Briticle):
             return re.sub(r'[^-\w ]+', '', self.title).replace(' ', '_')
         return ""
 
-    def save_to_mobi(self, title="", file_name=""):
+    def save_to_mobi(self, title="", file_name="", sent_by=""):
         if self.is_empty():
             return None
 
@@ -389,6 +389,8 @@ class BriticleFile(Briticle):
         html += u'</head><body>'
         with open(self.html_file) as f:
             html += f.read().decode('utf8')
+        if sent_by:
+            html += u'Sent by %s' % sent_by
         html += u'</body></html>'
         html_file_temp = re.sub(r'\.html$', '.tmp.html', self.html_file)
         with open(html_file_temp, 'w') as f:
@@ -442,6 +444,11 @@ class BriticleFile(Briticle):
                 download_to_local(src, local_file_name)
             except urllib2.URLError:
                 continue
+            except Exception, e:
+                if 'timed out' in str(e):
+                    continue
+                raise
+
             new_tag = soup.new_tag("img", src=file_name + "/" + image_name)
             img.replace_with(new_tag)
             i += 1
