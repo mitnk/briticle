@@ -386,7 +386,7 @@ class BriticleFile(Briticle):
             raise OSError("html version file does not exist while generating mobi")
 
         html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
-        html += u'</head><body>'
+        html += u'<title>%s</title></head><body>' % self.title
         with open(self.html_file) as f:
             html += f.read().decode('utf8')
         if sent_by:
