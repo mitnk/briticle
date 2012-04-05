@@ -375,13 +375,7 @@ class BriticleFile(Briticle):
     def save_to_mobi(self, title="", file_name="", sent_by=""):
         if self.is_empty():
             return None
-
-        html_file = os.path.join(self.save_dir, self._get_file_name_from_title() + '.html')
-        if os.path.exists(html_file):
-            self.html_file = html_file
-        else:
-            self.save_to_html(title, file_name)
-
+        self.save_to_html(title, file_name)
         if not self.html_file or not os.path.exists(self.html_file):
             raise OSError("html version file does not exist while generating mobi")
 
