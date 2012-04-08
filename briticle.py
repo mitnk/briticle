@@ -7,8 +7,8 @@ Basic Usage:
 
 >>> bs = Briticle()
 >>> bs.open('http://example.com/blog-post-url/')
->>> print bs.text # the main content
 >>> print bs.html # the main content with html tags
+>>> print bs.text # the main content
 
 Author:
 mitnk @ twitter
@@ -18,7 +18,6 @@ whgking@gmail.com
 import HTMLParser
 import logging
 import os
-import os.path
 import re
 import subprocess
 import urllib2
@@ -40,24 +39,66 @@ USER_AGENT = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2)"
 ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 HEADERS = [('User-agent', USER_AGENT), ("Accept", ACCEPT)]
 
-def download_to_local(url, local_name):
-    opener = urllib2.build_opener()
-    opener.addheaders = HEADERS
-    r = opener.open(url, timeout=9)
-    f = open(local_name, 'wb')
+opener = urllib2.build_opener()
+opener.addheaders = HEADERS
+
+class BlogFetcher:
+    def __init__(self, url, title_func, url_func):
+        self.url = url
+        self.title_func = title_func
+        self.url_func = url_func
+        self.article = []
+
+    def get_article(self, url):
+        pass
+
+    def get_article_list(self):
+        page = opener.open(self.url)
+        self.soup = BeautifulSoup(page, from_encoding='utf8')
+        tags = self.soup.find_all(self.title_func)
+        titles = [tag.text for tag in tags]
+        tags = self.soup.find_all(self.url_func)
+        urls = [tag['href'] for tag in tags]
+        if not titles or len(titles) != len(urls):
+            raise ValueError("Error in parsering %s" % self.url)
+
+        #TODO: improve the implement
+        articles = []
+        i = 0
+        for title in titles:
+            url = urls[i]
+            articles.append(dict(title=title, url=url))
+            i += 1
+        self.articles = articles
+
+
+def download_to_local(url, local_path):
+    r = opener.open(url, timeout=8)
+    f = open(local_path, 'wb')
     f.write(r.read())
     f.close()
 
 class Briticle:
+    url = ''
+    title = ''
+    html = ''
+    _removal_patterns = ['post-bottom-area', 'entryDescription',
+        'toolsListContainer', 'BlogEntryInfo', 'related', 'meta', 'links',
+        'sharing-', 'addthis_toolbox', 'post_header', 'comment', 'widget-']
+
+    def _get_text(self):
+        bs = BeautifulSoup(self.html, 'html.parser')
+        text = self._parse_raw_text(bs.get_text())
+        return text
+    text = property(_get_text)
+
     def __init__(self, url=''):
         self.url = url
-        self.title = ""
-        self.text = self.html = ""
         if url:
             self.open(url)
 
     def is_empty(self):
-        return len(self.text) < MIN_LIMIT or len(self.html) < MIN_LIMIT
+        return len(self.html) < MIN_LIMIT
 
     def _parse_raw_text(self, txt):
         html_parser = HTMLParser.HTMLParser()
@@ -73,7 +114,6 @@ class Briticle:
         """
         tag = self.soup.article
         if tag:
-            self.text = self._parse_raw_text(tag.get_text())
             self.html = unicode(tag)
             logging.debug(" *** Found it with article tag !!! ***")
             return True
@@ -105,7 +145,6 @@ class Briticle:
 
             content = self._parse_raw_text(max_tag.get_text())
             if len(content) > MIN_LIMIT:
-                self.text = content
                 self.html = unicode(max_tag)
                 logging.debug(" *** Found it with DIV class !!! ***")
                 return True
@@ -125,7 +164,6 @@ class Briticle:
             # This is for case tag.name is like <td>, which is invalid for kindlegen
             if tag.name != "div":
                 tag.name = "div"
-            self.text = self._parse_raw_text(tag.get_text())
             self.html = unicode(tag)
             logging.debug(" *** Found it with algorithm !!! ***")
             return True
@@ -137,7 +175,6 @@ class Briticle:
         self._search_with_article_tag() or \
         self._search_with_div_class() or \
         self._search_with_algorithm()
-        self.text = self.text
         if len(self.text) < MIN_LIMIT:
             self.text = self.html = ""
 
@@ -155,7 +192,13 @@ class Briticle:
         self._get_content()
 
     def _deal_with_special_sites(self):
+        if 'posterous.com' in self.url:
+            self._removal_patterns += ['editbox']
+
         if 'wiki' in self.url:
+            self._removal_patterns += ['infobox', 'toc', 'siteSub', 'metadata',
+                'editsection', 'jump-to-nav', 'printfooter']
+
             for tag in self.soup.find_all('a'):
                 if 'href' in tag.attrs and tag['href'].endswith('.svg') and tag.img:
                     tag.replace_with(tag.img)
@@ -163,23 +206,16 @@ class Briticle:
                 if 'src' in tag.attrs and tag['src'].endswith('magnify-clip.png'):
                     tag.extract()
 
-            for tag in self.soup.findAll('h2'):
+            for tag in self.soup.find_all('h2'):
                 if 'See also' in tag.get_text():
                     for sibling in tag.find_next_siblings(True):
                         sibling.extract()
                     tag.extract()
-            p_meta = re.compile(r'infobox|toc|siteSub|metadata|editsection|jump-to-nav|printfooter')
-            for tag in self.soup.find_all(attrs=p_meta):
-                tag.extract()
-            for tag in self.soup.find_all(attrs={'id': p_meta}):
-                tag.extract()
 
     def _get_soup(self, url='', file_='', timeout=5):
         if file_:
             page = open(file_)
         else:
-            opener = urllib2.build_opener()
-            opener.addheaders = HEADERS
             page = opener.open(self.url, timeout=timeout)
         self.soup = BeautifulSoup(page, from_encoding='utf8')
 
@@ -310,95 +346,130 @@ class Briticle:
         """
         Remove all tags whose id or class attr with the following chars
         """
-        p_meta = re.compile(r'post-bottom-area|entryDescription|'
-            r'toolsListContainer|BlogEntryInfo|related|meta|sharing-|'
-            r'addthis_toolbox|post_header|comment|widget-|links')
+        p_meta = re.compile('|'.join(self._removal_patterns))
         for tag in self.soup.find_all(attrs=p_meta):
             tag.extract()
         for tag in self.soup.find_all(attrs={'id': p_meta}):
             tag.extract()
 
-    def save_to_file(self, dir_name, title="", sent_by=None):
+
+
+class BriticleFile(Briticle):
+    save_dir = ""
+    html_file = ""
+    txt_file = ""
+
+    def __init__(self, url, save_dir):
+        self.save_dir = save_dir
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        self.url = url
+        if url:
+            self.open(url)
+
+    def _get_file_name_from_title(self):
+        if self.title:
+            return re.sub(r'[^-\w ]+', '', self.title).replace(' ', '_')
+        return ""
+
+    def save_to_mobi(self, title="", file_name="", sent_by=""):
         if self.is_empty():
             return None
+        self.save_to_html(title, file_name)
+        if not self.html_file or not os.path.exists(self.html_file):
+            raise OSError("html version file does not exist while generating mobi")
 
-        def _clean_temp_files():
-            """ Remove images using in the html file """
-            file_list = os.listdir(dir_name)
-            for f in file_list:
-                f = dir_name + "/" + f
-                if os.path.isdir(f):
-                    continue
-                if not f.endswith(".mobi") and not f.endswith(".txt"):
-                    os.remove(f)
+        html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
+        html += u'<title>%s</title></head><body>' % self.title
+        with open(self.html_file) as f:
+            html += f.read().decode('utf8')
+        if sent_by:
+            html += u'Sent by %s' % sent_by
+        html += u'</body></html>'
+        html_file_temp = re.sub(r'\.html$', '.tmp.html', self.html_file)
+        with open(html_file_temp, 'w') as f:
+            f.write(html.encode('utf-8'))
+        nut_mobi_name = re.sub(r'.html$', '.mobi', (self.html_file.split('/')[-1]))
+        cmd = ["kindlegen", html_file_temp, "-o", nut_mobi_name]
+        subprocess.call(cmd)
+        os.remove(html_file_temp)
+        mobi_file = re.sub(r'\.html$', '.mobi', self.html_file)
+        if not os.path.exists(mobi_file):
+            return None
+        self.mobi_file = mobi_file
+        return mobi_file
 
-        def _generate_mobi():
-            nut_mobi_name = re.sub(r'.html$', '.mobi', (html_file.split('/')[-1]))
-            cmd = ["kindlegen", html_file, "-o", nut_mobi_name]
-            subprocess.call(cmd)
-            mobi_file = re.sub(r'\.html$', '.mobi', html_file)
-            if not os.path.exists(mobi_file):
-                return None
-            return mobi_file
-
-        if title:
-            file_name = re.sub(r'[^0-9a-zA-Z _-]+', '', title).replace(' ', '_')
-        else:
-            file_name = re.sub(r'[^0-9a-zA-Z _-]+', '', self.title).replace(' ', '_')
+    def save_to_html(self, title="", file_name=""):
+        """
+        title: The <H1> title in the mobi file
+        file_name: Save file as <file_name>.mobi
+        """
+        if self.is_empty():
+            return None
+        if not title:
+            title = self.title
+        # Generate file name via title if doesn't exist
         if not file_name:
-            file_name = "Untitled_Documentation"
+            if title:
+                file_name = re.sub(r'[^-\w ]+', '', title).replace(' ', '_')
+            else:
+                file_name = re.sub(r'[^-\w ]+', '', self.title).replace(' ', '_')
+            if not file_name:
+                file_name = "Untitled_Documentation"
 
         # Save images to local and change the <img> src to new location
         i = 1
         soup = BeautifulSoup(self.html, 'html.parser')
-        images = soup.findAll('img')
+        images = soup.find_all('img')
         for img in images:
             if 'src' not in img.attrs:
                 continue
             src = img['src']
             image_ext = src.split(".")[-1]
-            if len(image_ext) != 3:
-                # Guess a ext when does not exist
+            # Set it as PNG when suffix does not exist
+            if len(image_ext) >= 5:
                 image_ext = "png"
-            image_name = "%s_%s.%s" % (file_name, i, image_ext)
-            local_file_name = os.path.join(dir_name, image_name)
+            image_name = "%03d.%s" % (i, image_ext)
+            dir_image = os.path.join(self.save_dir, file_name)
+            if not os.path.exists(dir_image):
+                os.mkdir(dir_image)
+            local_file_name = os.path.join(dir_image, image_name)
             try:
                 download_to_local(src, local_file_name)
             except urllib2.URLError:
                 continue
-            new_tag = soup.new_tag("img", src=image_name)
+            except Exception, e:
+                if 'timed out' in str(e):
+                    continue
+                raise
+
+            new_tag = soup.new_tag("img", src=file_name + "/" + image_name)
             img.replace_with(new_tag)
             i += 1
-        self.html = unicode(soup)
 
-        html_file = os.path.join(dir_name, file_name + '.html')
+        html_file = os.path.join(self.save_dir, file_name + '.html')
+        tags_h1 = soup.find_all('h1')
+        h1_exists = True if (tags_h1 and len(tags_h1) == 1) else False
         with open(html_file, 'w') as f:
-            html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
-            if title:
-                html += u'<title>%s</title></head><body><h1>%s</h1>' % (title, title)
-            else:
-                html += u'<title>%s</title></head><body><h1>%s</h1>' % (self.title, self.title)
-            html += self.html
+            html = ""
+            if not h1_exists:
+                html = u'<h1>%s</h1>\r\n' % title
+            html += unicode(soup)
+
+            # FIXME: netloc not correct for URLs ends with "xxx.com.cn"
             try:
                 netloc = urlparse(self.url).netloc
                 netloc = u".".join(netloc.split(".")[-2:])
             except:
                 netloc = u"Original URL"
             html += u'<br/>From <a href="%s">%s</a>. ' % (self.url, netloc)
-            if sent_by:
-                html += u'Sent by %s' % sent_by
-            html += u'</body></html>'
             f.write(html.encode('utf-8'))
-        mobi_file = _generate_mobi()
-        _clean_temp_files()
+        self.html_file = html_file
+        return html_file
 
-        # Create a txt file if mobi file failed to generated
-        if not mobi_file:
-            txt_file = os.path.join(dir_name, file_name + '.txt')
-            with open(txt_file, 'w') as f:
-                f.write(self.text.encode('utf-8'))
-                f.write(u"\n\n" + unicode(self.url))
-            return txt_file
-        return mobi_file
-
-
+    def save_to_txt(self, file_name):
+        f = os.path.join(self.save_dir, file_name + '.txt')
+        with open(f, 'w') as f:
+            f.write(self.text.encode('utf-8'))
+            f.write(u"\n\n" + unicode(self.url))
+        return f
