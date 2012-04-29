@@ -42,35 +42,6 @@ HEADERS = [('User-agent', USER_AGENT), ("Accept", ACCEPT)]
 opener = urllib2.build_opener()
 opener.addheaders = HEADERS
 
-class BlogFetcher:
-    def __init__(self, url, title_func, url_func):
-        self.url = url
-        self.title_func = title_func
-        self.url_func = url_func
-        self.article = []
-
-    def get_article(self, url):
-        pass
-
-    def get_article_list(self):
-        page = opener.open(self.url)
-        self.soup = BeautifulSoup(page, from_encoding='utf8')
-        tags = self.soup.find_all(self.title_func)
-        titles = [tag.text for tag in tags]
-        tags = self.soup.find_all(self.url_func)
-        urls = [tag['href'] for tag in tags]
-        if not titles or len(titles) != len(urls):
-            raise ValueError("Error in parsering %s" % self.url)
-
-        #TODO: improve the implement
-        articles = []
-        i = 0
-        for title in titles:
-            url = urls[i]
-            articles.append(dict(title=title, url=url))
-            i += 1
-        self.articles = articles
-
 
 def download_to_local(url, local_path):
     r = opener.open(url, timeout=8)
@@ -256,6 +227,14 @@ class Briticle:
             src = tag['src']
             if src.startswith('//'):
                 src = urlparse(self.url).scheme + ":" + src
+            #TODO: extact out as an function
+            elif src.startswith('../'):
+                src_ = src
+                url_ = re.sub(r'%s$' % self.url.strip('/').split('/')[-1], '', self.url.strip('/'))
+                while src_.startswith('../'):
+                    url_ = re.sub(r'%s$' % url_.strip('/').split('/')[-1], '', url_.strip('/'))
+                    src_ = re.sub(r'^../', '', src_)
+                src = url_ + src_
             elif not src.startswith('http'):
                 src = 'http://' + urlparse(self.url).netloc + "/" + src
             tag['src'] = src
