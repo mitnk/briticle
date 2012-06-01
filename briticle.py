@@ -431,8 +431,11 @@ class BriticleFile(Briticle):
         h1_exists = True if (tags_h1 and len(tags_h1) == 1) else False
         with open(html_file, 'w') as f:
             html = ""
-            if not h1_exists:
-                html = u'<h1>%s</h1>\r\n' % title
+            if h1_exists:
+                hr = soup.new_tag('hr')
+                tags_h1[0].insert_after(hr)
+            else:
+                html = u'<h1>%s</h1>\r\n<hr>\r\n' % title
             html += unicode(soup)
 
             # FIXME: netloc not correct for URLs ends with "xxx.com.cn"

@@ -1,5 +1,4 @@
 build/
-*.pyc
+*.py[co]
 *.pid
 *.log
-.*
