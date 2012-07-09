@@ -58,7 +58,10 @@ class Briticle:
         'sharing-', 'addthis_toolbox', 'post_header', 'comment', 'widget-']
 
     def _get_text(self):
-        bs = BeautifulSoup(self.html, 'html.parser')
+        try:
+            bs = BeautifulSoup(self.html, 'html.parser')
+        except HTMLParser.HTMLParseError:
+            return ''
         text = self._parse_raw_text(bs.get_text())
         return text
     text = property(_get_text)
