@@ -9,4 +9,4 @@ setup(name='briticle',
     author_email='whgking@gmail.com',
     url='http://mitnk.com/briticle/',
     py_modules=['briticle'],
-    )
+)

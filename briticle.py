@@ -44,7 +44,7 @@ opener.addheaders = HEADERS
 
 
 def download_to_local(url, local_path):
-    r = opener.open(url, timeout=8)
+    r = opener.open(url, timeout=30)
     f = open(local_path, 'wb')
     f.write(r.read())
     f.close()
@@ -186,7 +186,7 @@ class Briticle:
                         sibling.extract()
                     tag.extract()
 
-    def _get_soup(self, url='', file_='', timeout=5):
+    def _get_soup(self, url='', file_='', timeout=30):
         if file_:
             page = open(file_)
         else:
@@ -194,8 +194,39 @@ class Briticle:
         self.soup = BeautifulSoup(page, from_encoding='utf8')
 
     def _remove_useless_tags(self):
-        for tag in self.soup.find_all("font"):
+        soup = self.soup
+
+        for tag in soup.find_all("font"):
             tag.attrs = {}
+
+        for tag_name in ("p", "h1", "h2", "h3", "h4", "h5", "h6", "div", "span"):
+            for tag in soup.find_all(tag_name):
+                for key in tag.attrs.keys():
+                    del tag[key]
+        for tag in soup.find_all('img'):
+            if not tag.has_attr('src') or '//' in tag['src']:
+                tag.decompose()
+            else:
+                new_tag = soup.new_tag('img', src=tag['src'])
+                tag.replace_with(new_tag)
+
+        for tag in soup.find_all('a'):
+            if not tag.string:
+                tag.decompose()
+            elif not tag.has_attr('href') or not tag['href'].startswith('http'):
+                new_tag = soup.new_tag('u')
+                new_tag.string = tag.string
+                tag.replace_with(new_tag)
+            else:
+                new_tag = soup.new_tag('a', href=tag['href'])
+                new_tag.string = tag.string
+                tag.replace_with(new_tag)
+        for tag_name in ("abbr", "iframe", "input", "nav", "form", "script",
+                "like", "plusone", "header", "fb:like", "g:plusone", "spanre",
+                "noscript", "link", "button", "label", "data", "select",
+                "textarea"):
+            for tag in soup.find_all(tag_name):
+                tag.decompose()
 
     def _remove_comment_js_css(self):
         for c in self.soup.find_all(text=lambda t:isinstance(t, Comment)):
@@ -335,6 +366,16 @@ class Briticle:
             tag.extract()
 
 
+class BriticleException(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+
+    def __unicode__(self):
+        return u"BriticleException: %s" % self.reason
+
+    def __str__(self):
+        return "BriticleException: %s" % self.reason
+
 
 class BriticleFile(Briticle):
     save_dir = ""
@@ -356,15 +397,20 @@ class BriticleFile(Briticle):
 
     def save_to_mobi(self, title="", file_name="", sent_by=""):
         if self.is_empty():
-            return None
+            raise BriticleException("File is empty")
         self.save_to_html(title, file_name)
         if not self.html_file or not os.path.exists(self.html_file):
-            raise OSError("html version file does not exist while generating mobi")
+            raise BriticleException("html version file does not exist while generating mobi")
 
         html = u'<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8">'
         html += u'<title>%s</title></head><body>' % self.title
         with open(self.html_file) as f:
-            html += f.read().decode('utf8')
+            content = f.read()
+            for tag in ("h1", "h2", "h3", "h4"):
+                content = re.sub(r'<%s [^>]*>' % tag, '<%s>' % tag, content)
+            content = content.replace('<h2>', '<h3>').replace('<h1>', '<h2>')
+            content = content.replace('</h2>', '</h3>').replace('</h1>', '</h2>')
+            html += content.decode('utf8')
         if sent_by:
             html += u'Sent by %s' % sent_by
         html += u'</body></html>'
@@ -372,12 +418,18 @@ class BriticleFile(Briticle):
         with open(html_file_temp, 'w') as f:
             f.write(html.encode('utf-8'))
         nut_mobi_name = re.sub(r'.html$', '.mobi', (self.html_file.split('/')[-1]))
-        cmd = ["kindlegen", html_file_temp, "-o", nut_mobi_name]
-        subprocess.call(cmd)
-        os.remove(html_file_temp)
+        cmd = ["/usr/local/bin/kindlegen", html_file_temp, "-o", nut_mobi_name]
+        try:
+            subprocess.check_output(cmd)
+        except subprocess.CalledProcessError, e:
+            # kindlegen will raise exit code 1 for warnning generatings
+            # at this time mobi file was generated
+            pass
+        if os.path.exists(html_file_temp):
+            os.remove(html_file_temp)
         mobi_file = re.sub(r'\.html$', '.mobi', self.html_file)
         if not os.path.exists(mobi_file):
-            return None
+            raise BriticleException("Failed generating mobi file")
         self.mobi_file = mobi_file
         return mobi_file
 
@@ -387,7 +439,7 @@ class BriticleFile(Briticle):
         file_name: Save file as <file_name>.mobi
         """
         if self.is_empty():
-            return None
+            raise BriticleException("File is empty")
         if not title:
             title = self.title
         # Generate file name via title if doesn't exist
@@ -433,12 +485,14 @@ class BriticleFile(Briticle):
         tags_h1 = soup.find_all('h1')
         h1_exists = True if (tags_h1 and len(tags_h1) == 1) else False
         with open(html_file, 'w') as f:
-            html = ""
+            html = u""
             if h1_exists:
                 hr = soup.new_tag('hr')
                 tags_h1[0].insert_after(hr)
             else:
-                html = u'<h1>%s</h1>\r\n<hr>\r\n' % title
+                if isinstance(title, str):
+                    title = title.decode('utf-8')
+                html = u'<h1>%s</h1>\r\n<hr/>\r\n' % title
             html += unicode(soup)
 
             # FIXME: netloc not correct for URLs ends with "xxx.com.cn"
