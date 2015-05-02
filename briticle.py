@@ -15,13 +15,16 @@ mitnk @ twitter
 whgking@gmail.com
 """
 
-import HTMLParser
+from html.parser import HTMLParser, HTMLParseError
+
 import logging
 import os
 import re
 import subprocess
-import urllib2
-from urlparse import urlparse
+
+from urllib.request import build_opener
+
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 from bs4.element import Comment
@@ -39,7 +42,7 @@ USER_AGENT = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2)"
 ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 HEADERS = [('User-agent', USER_AGENT), ("Accept", ACCEPT)]
 
-opener = urllib2.build_opener()
+opener = build_opener()
 opener.addheaders = HEADERS
 
 
@@ -53,6 +56,8 @@ class Briticle:
     url = ''
     title = ''
     html = ''
+    text = ''
+    __text = None
     _removal_patterns = ['post-bottom-area', 'entryDescription',
         'toolsListContainer', 'BlogEntryInfo', 'related', 'meta', 'links',
         'sharing-', 'addthis_toolbox', 'post_header', 'comment', 'widget-']
@@ -60,11 +65,16 @@ class Briticle:
     def _get_text(self):
         try:
             bs = BeautifulSoup(self.html, 'html.parser')
-        except HTMLParser.HTMLParseError:
+        except HTMLParseError:
             return ''
         text = self._parse_raw_text(bs.get_text())
         return text
-    text = property(_get_text)
+
+    @property
+    def text(self):
+        if not self.__text:
+            self.__text = self._get_text()
+        return self.__text
 
     def __init__(self, url=''):
         self.url = url
@@ -75,20 +85,20 @@ class Briticle:
         return len(self.html) < MIN_LIMIT
 
     def _parse_raw_text(self, txt):
-        html_parser = HTMLParser.HTMLParser()
+        html_parser = HTMLParser()
         txt = re.sub(r'\t', '', txt)
         txt = re.sub(r'\r', '', txt)
         txt = re.sub(r'\n+', '\n\n', txt)
         return html_parser.unescape(txt)
 
     def _search_with_article_tag(self):
-        """ Using HTML5 <article> tag 
+        """ Using HTML5 <article> tag
 
         Only works well with html5lib or lxml
         """
         tag = self.soup.article
         if tag:
-            self.html = unicode(tag)
+            self.html = '{}'.format(tag)
             logging.debug(" *** Found it with article tag !!! ***")
             return True
         return False
@@ -119,11 +129,11 @@ class Briticle:
 
             content = self._parse_raw_text(max_tag.get_text())
             if len(content) > MIN_LIMIT:
-                self.html = unicode(max_tag)
+                self.html = '{}'.format(max_tag)
                 logging.debug(" *** Found it with DIV class !!! ***")
                 return True
         return False
-        
+
     def _search_with_algorithm(self):
         """ Try to find the main div tag with <p> inside """
         logging.debug("searching main div with algorithm ...")
@@ -138,7 +148,7 @@ class Briticle:
             # This is for case tag.name is like <td>, which is invalid for kindlegen
             if tag.name != "div":
                 tag.name = "div"
-            self.html = unicode(tag)
+            self.html = '{}'.format(tag)
             logging.debug(" *** Found it with algorithm !!! ***")
             return True
         return False
@@ -150,7 +160,8 @@ class Briticle:
         self._search_with_div_class() or \
         self._search_with_algorithm()
         if len(self.text) < MIN_LIMIT:
-            self.text = self.html = ""
+            self.__text = ""
+            self.html = ""
 
     def open(self, url="", file_=""):
         if url:
@@ -201,8 +212,9 @@ class Briticle:
 
         for tag_name in ("p", "h1", "h2", "h3", "h4", "h5", "h6", "div", "span"):
             for tag in soup.find_all(tag_name):
-                for key in tag.attrs.keys():
+                for key in list(tag.attrs.keys()):
                     del tag[key]
+
         for tag in soup.find_all('img'):
             if not tag.has_attr('src') or '//' in tag['src']:
                 tag.decompose()
@@ -410,18 +422,18 @@ class BriticleFile(Briticle):
                 content = re.sub(r'<%s [^>]*>' % tag, '<%s>' % tag, content)
             content = content.replace('<h2>', '<h3>').replace('<h1>', '<h2>')
             content = content.replace('</h2>', '</h3>').replace('</h1>', '</h2>')
-            html += content.decode('utf8')
+            html += content
         if sent_by:
             html += u'Sent by %s' % sent_by
         html += u'</body></html>'
         html_file_temp = re.sub(r'\.html$', '.tmp.html', self.html_file)
         with open(html_file_temp, 'w') as f:
-            f.write(html.encode('utf-8'))
+            f.write(html)
         nut_mobi_name = re.sub(r'.html$', '.mobi', (self.html_file.split('/')[-1]))
         cmd = ["/usr/local/bin/kindlegen", html_file_temp, "-o", nut_mobi_name]
         try:
             subprocess.check_output(cmd)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             # kindlegen will raise exit code 1 for warnning generatings
             # at this time mobi file was generated
             pass
@@ -472,7 +484,7 @@ class BriticleFile(Briticle):
                 download_to_local(src, local_file_name)
             except urllib2.URLError:
                 continue
-            except Exception, e:
+            except Exception as e:
                 if 'timed out' in str(e):
                     continue
                 raise
@@ -493,7 +505,7 @@ class BriticleFile(Briticle):
                 if isinstance(title, str):
                     title = title.decode('utf-8')
                 html = u'<h1>%s</h1>\r\n<hr/>\r\n' % title
-            html += unicode(soup)
+            html += '{}'.format(soup)
 
             # FIXME: netloc not correct for URLs ends with "xxx.com.cn"
             try:
@@ -502,13 +514,13 @@ class BriticleFile(Briticle):
             except:
                 netloc = u"Original URL"
             html += u'<br/>From <a href="%s">%s</a>. ' % (self.url, netloc)
-            f.write(html.encode('utf-8'))
+            f.write(html)
         self.html_file = html_file
         return html_file
 
     def save_to_txt(self, file_name):
         f = os.path.join(self.save_dir, file_name + '.txt')
         with open(f, 'w') as f:
-            f.write(self.text.encode('utf-8'))
-            f.write(u"\n\n" + unicode(self.url))
+            f.write(self.text)
+            f.write(u"\n\n" + '{}'.format(self.url))
         return f

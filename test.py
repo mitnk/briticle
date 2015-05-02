@@ -29,7 +29,7 @@ class TestBriticle(unittest.TestCase):
             br.open(file_=f)
             self.assertOk(len(br.text.replace('\n', '')), count, delta=10)
             self.assertTrue(len(br.html) > len(br.text))
-    
+
     def test_title(self):
         br = Briticle()
         br.open(file_="./tests/functions/get_title1.html")
@@ -40,7 +40,7 @@ class TestBriticle(unittest.TestCase):
     def test_remove_font_size(self):
         br = Briticle()
         br.open(file_="./tests/functions/remove_font_size.html")
-        self.assertTrue("font size=" not in unicode(br.html))
+        self.assertTrue("font size=" not in '{}'.format(br.html))
 
     def test_always_return_div(self):
         br = Briticle()
