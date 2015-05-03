@@ -22,9 +22,9 @@ import os
 import re
 import subprocess
 
-from urllib.request import build_opener
-
+from urllib.error import URLError
 from urllib.parse import urlparse
+from urllib.request import build_opener
 
 from bs4 import BeautifulSoup
 from bs4.element import Comment
@@ -433,7 +433,7 @@ class BriticleFile(Briticle):
         cmd = ["/usr/local/bin/kindlegen", html_file_temp, "-o", nut_mobi_name]
         try:
             subprocess.check_output(cmd)
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             # kindlegen will raise exit code 1 for warnning generatings
             # at this time mobi file was generated
             pass
@@ -482,7 +482,7 @@ class BriticleFile(Briticle):
             local_file_name = os.path.join(dir_image, image_name)
             try:
                 download_to_local(src, local_file_name)
-            except urllib2.URLError:
+            except URLError:
                 continue
             except Exception as e:
                 if 'timed out' in str(e):
@@ -502,9 +502,7 @@ class BriticleFile(Briticle):
                 hr = soup.new_tag('hr')
                 tags_h1[0].insert_after(hr)
             else:
-                if isinstance(title, str):
-                    title = title.decode('utf-8')
-                html = u'<h1>%s</h1>\r\n<hr/>\r\n' % title
+                html = u'<h1>{}</h1>\r\n<hr/>\r\n'.format(title)
             html += '{}'.format(soup)
 
             # FIXME: netloc not correct for URLs ends with "xxx.com.cn"
