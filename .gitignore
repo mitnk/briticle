@@ -1,4 +1,6 @@
+briticle.egg-info/
 build/
+dist/
 *.py[co]
 *.pid
 *.log

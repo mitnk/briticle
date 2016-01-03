@@ -7,15 +7,15 @@ Basic Usage:
 
 >>> bs = Briticle()
 >>> bs.open('http://example.com/blog-post-url/')
->>> print bs.html # the main content with html tags
->>> print bs.text # the main content
+>>> print(bs.html) # the main content with html tags
+>>> print(bs.text) # the main content
 
 Author:
 mitnk @ twitter
-whgking@gmail.com
+w@mitnk.com
 """
 
-from html.parser import HTMLParser, HTMLParseError
+from html.parser import HTMLParser
 
 import logging
 import os
@@ -65,7 +65,7 @@ class Briticle:
     def _get_text(self):
         try:
             bs = BeautifulSoup(self.html, 'html.parser')
-        except HTMLParseError:
+        except:
             return ''
         text = self._parse_raw_text(bs.get_text())
         return text
