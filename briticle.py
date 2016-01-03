@@ -26,6 +26,12 @@ from urllib.error import URLError
 from urllib.parse import urlparse
 from urllib.request import build_opener
 
+try:
+    import lxml
+    has_lxml = True
+except:
+    has_lxml = False
+
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 
@@ -202,7 +208,10 @@ class Briticle:
             page = open(file_)
         else:
             page = opener.open(self.url, timeout=timeout)
-        self.soup = BeautifulSoup(page, from_encoding='utf8')
+        if has_lxml:
+            self.soup = BeautifulSoup(page, 'lxml', from_encoding='utf8')
+        else:
+            self.soup = BeautifulSoup(page, 'html.parser', from_encoding='utf8')
 
     def _remove_useless_tags(self):
         soup = self.soup
