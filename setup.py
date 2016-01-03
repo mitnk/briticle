@@ -14,7 +14,7 @@ Requirements:
 
 setup(
     name='briticle',
-    version='0.9.2',
+    version='0.9.3',
 
     description='Extract the main content of a webpage',
     long_description=DESC,

@@ -526,8 +526,8 @@ class BriticleFile(Briticle):
         return html_file
 
     def save_to_txt(self, file_name):
-        f = os.path.join(self.save_dir, file_name + '.txt')
-        with open(f, 'w') as f:
+        file_path = os.path.join(self.save_dir, file_name + '.txt')
+        with open(file_path, 'w') as f:
             f.write(self.text)
             f.write(u"\n\n" + '{}'.format(self.url))
-        return f
+        return file_path
