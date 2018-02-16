@@ -258,7 +258,7 @@ class Briticle:
             style.extract()
 
     def _get_title(self):
-        title_tag = self.soup.html.title
+        title_tag = self.soup.html.title if hasattr(self.soup.html, "title") else None
         if title_tag:
             title = title_tag.string
         else:
