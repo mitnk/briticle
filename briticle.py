@@ -38,13 +38,13 @@ from bs4.element import Comment
 
 __all__ = ['Briticle']
 
-VERSION = (1, 0, 0, 'rc', 1)
+VERSION = (1, 1, 0)
 
 VERBOSE = False
 MIN_LIMIT = 512
 
-USER_AGENT = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2)"
-    " Gecko/20100101 Firefox/10.0.2")
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) " \
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
 ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 HEADERS = [('User-agent', USER_AGENT), ("Accept", ACCEPT)]
 
@@ -82,8 +82,9 @@ class Briticle:
             self.__text = self._get_text()
         return self.__text
 
-    def __init__(self, url=''):
+    def __init__(self, url='', cookie=None):
         self.url = url
+        self.cookie = cookie
         if url:
             self.open(url)
 
@@ -207,6 +208,11 @@ class Briticle:
         if file_:
             page = open(file_)
         else:
+            opener = build_opener()
+            headers = HEADERS[:]
+            if self.cookie:
+                headers.append(('cookie', self.cookie))
+            opener.addheaders = headers
             page = opener.open(self.url, timeout=timeout)
         if has_lxml:
             self.soup = BeautifulSoup(page, 'lxml', from_encoding='utf8')
@@ -369,7 +375,7 @@ class Briticle:
                     break
             if not has_p:
                 continue
-            
+
             length = len(tag.get_text())
             if length > MIN_LIMIT and length > max_len:
                 max_len = length
@@ -403,7 +409,8 @@ class BriticleFile(Briticle):
     html_file = ""
     txt_file = ""
 
-    def __init__(self, url, save_dir):
+    def __init__(self, url, save_dir, cookie=None):
+        self.cookie = cookie
         self.save_dir = save_dir
         if not os.path.exists(save_dir):
             os.mkdir(save_dir)
@@ -476,6 +483,7 @@ class BriticleFile(Briticle):
         i = 1
         soup = BeautifulSoup(self.html, 'html.parser')
         images = soup.find_all('img')
+        print('images: {}'.format(images))
         for img in images:
             if 'src' not in img.attrs:
                 continue
